@@ -36,18 +36,19 @@ function pieceToHTML(p) {
  * highlighted.
  */
 export function BoardView(props) {
+  console.log(props.board);
   var squares = []
-  for(let i = 0; i < 8; i++) {
+  for(let i = 7; i >= 0; i--) {
     var row = [];
     for(let j = 0; j < 8; j++) {
       let type;
       if(i === props.selectRow && j === props.selectCol) type = "select";
       else if((i + j) % 2) type = "odd";
       else type = "even";
-      let id = pieceToHTML(props.board.pieceAt(7 - i, j));
+      let id = pieceToHTML(props.board.pieceAt(i, j));
       row.push(<Square id={id} type={type}
         onClick={(e) => {
-          console.log("clicked " + i + j);
+          props.onClick(i, j);
         }}
       />);
     }
@@ -72,7 +73,7 @@ function Square(props) {
       color = "#fdc086";
       break;
     case "select":
-      color = "ffffb3";
+      color = "#ffffb3";
       break;
     default: throw "Incomplete case match" + props.type;
   }

@@ -1,5 +1,5 @@
 
-export var Piece = {
+var Piece = {
   NULL: 0,
   W_PAWN: 1,
   W_ROOK: 2,
@@ -49,7 +49,7 @@ class Board {
   }
 }
 
-export class ChessBoard {
+class ChessBoard {
   //convention: row 0 corresponds to the first rank, row 7 corresponds to the
   //eigth rank. col 0 corresponds to the a-file, col 7 corresponds to the h-file
   //constructs an empty chess board. Client classes should use either
@@ -212,3 +212,5 @@ export class ChessBoard {
   }
 }
 
+module.exports.ChessBoard = ChessBoard;
+module.exports.Piece = Piece;

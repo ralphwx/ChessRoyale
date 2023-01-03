@@ -3,6 +3,7 @@ import React from "react";
 import {ChessBoard, Piece} from "./chess.js";
 import io from "socket.io-client";
 import {BoardView} from "./view.js";
+import {ResourceBar} from "./resourcebar.js";
 
 export class Controller extends React.Component {
   //controller needs to interact with the socketio server
@@ -22,7 +23,11 @@ export class Controller extends React.Component {
     this.socket.on("pong", () => {
       this.lastPong = Date.now();
     });
+    this.socket.on("moved", () => {
+      this.state.baseTime += 3000;
+    });
     this.socket.on("board", (board) => {
+      console.log("received board update");
       this.setState({
         board: ChessBoard.fromString(board),
         selectRow: this.state.selectRow,
@@ -33,6 +38,7 @@ export class Controller extends React.Component {
       board: ChessBoard.startingPosition(),
       selectRow: -1,
       selectCol: -1,
+      baseTime: Date.now(),
     }
     this.socket.emit("init", (data) => {
       let board = ChessBoard.fromString(data.board);
@@ -40,7 +46,13 @@ export class Controller extends React.Component {
         board: board,
         selectRow: this.state.selectRow,
         selectCol: this.state.selectCol,
+        baseTime: this.state.baseTime,
       });
+    });
+    this.resourceBarUpdater = setInterval(() => {
+      let now = Date.now();
+      if(now - this.state.baseTime > 30000) this.state.baseTime = now - 30000;
+      this.setState(this.state);
     });
   }
   onClick(i, j) {
@@ -57,6 +69,7 @@ export class Controller extends React.Component {
         });
       }
     } else {
+      if(Date.now() - this.state.baseTime < 3000) return;
       this.socket.emit("move", [this.state.selectRow, this.state.selectCol, 
         i, j]);
       this.setState({
@@ -67,11 +80,15 @@ export class Controller extends React.Component {
     }
   }
   render() {
-    return <BoardView 
-      board={this.state.board} 
-      selectRow={this.state.selectRow} 
-      selectCol={this.state.selectCol}
-      onClick={(i, j) => {this.onClick(i, j)}}
-    />
+    let amount = (Date.now() - this.state.baseTime) / 3000;
+    return <div>
+      <BoardView 
+        board={this.state.board} 
+        selectRow={this.state.selectRow} 
+        selectCol={this.state.selectCol}
+        onClick={(i, j) => {this.onClick(i, j)}}
+      />
+      <ResourceBar amount={amount}/>
+    </div>
   }
 }

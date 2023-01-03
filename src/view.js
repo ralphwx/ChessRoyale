@@ -36,7 +36,6 @@ function pieceToHTML(p) {
  * highlighted.
  */
 export function BoardView(props) {
-  console.log(props.board);
   var squares = []
   for(let i = 7; i >= 0; i--) {
     var row = [];

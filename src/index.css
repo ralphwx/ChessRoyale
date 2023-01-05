@@ -1,13 +1,39 @@
 
+.main_display {
+  width: 50%;
+  height: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 3px solid gray;
+  padding: 10px;
+  overflow: auto;
+}
+
+.roomli {
+  width: 90%;
+  height: auto;
+  font-size: 20px;
+  border: 2px solid lightgray;
+  padding: 5px;
+}
+
+.button_row {
+  width: 50%;
+  height: 50px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .gridrow:after {
   clear: both;
   content: "";
   display: table;
 }
+
 .square {
   width: 50px;
   height: 50px;
-  float:left;
+  float: left;
 }
 
 .resource {
@@ -17,4 +43,13 @@
   border-style: solid;
   border-width: 2px;
   border-color: #000000;
+}
+
+img {
+  width: 37px;
+  height: 37px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: auto;
+  margin-bottom: auto;
 }

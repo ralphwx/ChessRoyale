@@ -1,12 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import {ChessBoard, Piece} from "./chess.js";
-import {BoardView} from "./view.js";
-import {Controller} from "./controller.js";
+import {Lobby} from "./lobby.js";
+import {Game} from "./game.js";
+import {Manager} from "./manager.js";
 
-console.log(ChessBoard);
 const root = ReactDOM.createRoot(document.getElementById("root"));
-let view = <Controller ip={"localhost"} port={3000} />;
-//let view = <BoardView board={ChessBoard.startingPosition()}/>;
-root.render(view);
+root.render(<Manager />);
+//root.render(<img src={require("./img/b_bishop.png")}/>);

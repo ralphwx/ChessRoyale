@@ -76,6 +76,12 @@ function set_game(socket, game, color) {
       for(let s of game.getListeners()) {
         s.emit("board", game.boardState());
       }
+      let result = game.gameOver();
+      if(result.gameOver) {
+        for(let s of game.getListeners()) {
+          s.emit("gameover", result.winner);
+        }
+      }
     }
   });
   socket.on("ready", (ack) => {

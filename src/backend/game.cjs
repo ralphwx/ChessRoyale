@@ -26,6 +26,7 @@ class ServerGame {
 
   //color is true for white, false for black
   move(iRow, iCol, fRow, fCol, color) {
+    if(this.gameOver().gameOver) return false;
     if(!this.bothReady()) return false;
     if(this.board.validMove(iRow, iCol, fRow, fCol) 
       && this.board.pieceAt(iRow, iCol) >= Piece.B_PAWN !== color) {
@@ -46,6 +47,21 @@ class ServerGame {
 
   getListeners() {
     return this.listeners;
+  }
+
+  gameOver() {
+    let wking = false;
+    let bking = false;
+    for(let i = 0; i < 8; i++) {
+      for(let j = 0; j < 8; j++) {
+        if(this.board.pieceAt(i, j) === Piece.W_KING) wking = true;
+        if(this.board.pieceAt(i, j) === Piece.B_KING) bking = true;
+      }
+    }
+    return {
+      gameOver: !wking || !bking,
+      winner: wking
+    }
   }
 }
 

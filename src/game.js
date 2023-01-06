@@ -32,6 +32,14 @@ class Game extends React.Component {
         } else this.setState({});
       }, 100);
     });
+    this.socket.on("gameover", (result) => {
+      clearInterval(this.barUpdater);
+      let popup = setInterval(() => {
+        if(result) window.alert("white wins!");
+        else window.alert("black wins!");
+        clearInterval(popup);
+      }, 1000);
+    });
   }
 
   leaveGame() {

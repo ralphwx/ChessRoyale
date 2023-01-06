@@ -9,15 +9,7 @@ const {ChessGame, Piece} = require("../chess.js");
 
 const open_challenges = [];
 
-//TODO: when the user disconnects, kick them out of the game to prevent memory
-//leak
-//console.log(ServerGame);
-//let a = new ServerGame();
-//console.log(a.boardState);
-//console.log(a.setReady);
-//console.log(a.bothReady);
-//console.log(a.move);
-//console.log(a.getListeners);
+//TODO: when the user disconnects, kick them out of the game?
 
 //returns the index in open_challenges of the challenge issued by [socket]
 //return -1 if not found.
@@ -81,8 +73,8 @@ function set_game(socket, game, color) {
     [iRow, iCol, fRow, fCol] = move;
     if(game.move(iRow, iCol, fRow, fCol, (color === "white"))) {
       ack();
-      for(socket of game.getListeners()) {
-        socket.emit("board", game.boardState());
+      for(let s of game.getListeners()) {
+        s.emit("board", game.boardState());
       }
     }
   });
@@ -90,7 +82,7 @@ function set_game(socket, game, color) {
     game.setReady(color);
     if(game.bothReady()) {
       let now = Date.now();
-      for(s of game.getListeners()) {
+      for(let s of game.getListeners()) {
         s.emit("started", now);
       }
     }

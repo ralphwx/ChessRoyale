@@ -32,12 +32,12 @@ class Game extends React.Component {
         } else this.setState({});
       }, 100);
     });
-    this.socket.on("disconnecting", () => {
-      this.socket.emit("leave");
-    });
   }
 
   leaveGame() {
+    if(this.barUpdater !== undefined) {
+      clearInterval(this.barUpdater);
+    }
     this.socket.emit("leave");
     this.manager.changeState("lobby");
   }

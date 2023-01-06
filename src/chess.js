@@ -56,6 +56,10 @@ class ChessBoard {
   //ChessBoard.fromString() or ChessBoard.startingPosition().
   constructor() {
     this.board = new Board();
+    this.wkcastle = true;
+    this.wqcastle = true;
+    this.bkcastle = true;
+    this.bqcastle = true;
   }
   toString() {
     let output = []
@@ -122,7 +126,41 @@ class ChessBoard {
       case Piece.B_QUEEN:
         return step !== null && pathCheck;
       case Piece.W_KING:
+        if(iRow === 0 && fRow === 0 && fCol >= 6) {
+          return this.wkcastle
+            && this.pieceAt(0, 5) === Piece.NULL 
+            && this.pieceAt(0, 6) === Piece.NULL
+            && this.pieceAt(0, 7) === Piece.W_ROOK
+            && !this.isAttacked(0, 4, false)
+            && !this.isAttacked(0, 5, false);
+        }
+        if(iRow === 0 && fRow === 0 && fCol <= 2) {
+          return this.wqcastle
+            && this.pieceAt(0, 3) === Piece.NULL
+            && this.pieceAt(0, 2) === Piece.NULL
+            && this.pieceAt(0, 1) === Piece.NULL
+            && this.piece(0, 0) === Piece.W_ROOK
+            && !this.isAttacked(0, 4, false)
+            && !this.isAttacked(0, 3, false);
+        }
       case Piece.B_KING:
+        if(iRow === 7 && fRow === 7 && fCol >= 6) {
+          return this.bkcastle
+            && this.pieceAt(7, 5) === Piece.NULL
+            && this.pieceAt(7, 6) === Piece.NULL
+            && this.pieceAt(7, 7) === Piece.B_ROOK
+            && !this.isAttacked(7, 4, true)
+            && !this.isAttacked(7, 5, true);
+        }
+        if(iRow === 7 && fRow === 7 && fCol <= 2) {
+          return this.bqcastle
+            && this.pieceAt(7, 3) === Piece.NULL
+            && this.pieceAt(7, 2) === Piece.NULL
+            && this.pieceAt(7, 1) === Piece.NULL
+            && this.pieceAt(7, 0) === Piece.B_ROOK
+            && !this.isAttacked(7, 4, true)
+            && !this.isAttacked(7, 3, true);
+        }
         return step !== null 
           && fRow === iRow + step[0] 
           && fCol === iCol + step[1];
@@ -154,6 +192,56 @@ class ChessBoard {
   }
   move(iRow, iCol, fRow, fCol) {
     if(!this.validMove(iRow, iCol, fRow, fCol)) return;
+    //check for castling
+    if(this.pieceAt(iRow, iCol) === Piece.W_KING) {
+      this.wkcastle = false;
+      this.wqcastle = false;
+      if(fCol > iCol + 1) {
+        this.board.setPieceAt(0, 4, Piece.NULL);
+        this.board.setPieceAt(0, 5, Piece.W_ROOK);
+        this.board.setPieceAt(0, 6, Piece.W_KING);
+        this.board.setPieceAt(0, 7, Piece.NULL);
+        return;
+      }
+      if(fCol < iCol - 1) {
+        this.board.setPieceAt(0, 4, Piece.NULL);
+        this.board.setPieceAt(0, 3, Piece.W_ROOK);
+        this.board.setPieceAt(0, 2, Piece.W_KING);
+        this.board.setPieceAt(0, 0, Piece.NULL);
+        return;
+      }
+    }
+    if(this.pieceAt(iRow, iCol) === Piece.B_KING) {
+      this.bkcastle = false;
+      this.bqcastle = false;
+      if(fCol > iCol + 1) {
+        this.board.setPieceAt(7, 4, Piece.NULL);
+        this.board.setPieceAt(7, 5, Piece.B_ROOK);
+        this.board.setPieceAt(7, 6, Piece.B_KING);
+        this.board.setPieceAt(7, 7, Piece.NULL);
+        return;
+      }
+      if(fCol < iCol - 1) {
+        this.board.setPieceAt(7, 4, Piece.NULL);
+        this.board.setPieceAt(7, 3, Piece.B_ROOK);
+        this.board.setPieceAt(7, 2, Piece.B_KING);
+        this.board.setPieceAt(7, 0, Piece.NULL);
+        return;
+      }
+    }
+    //check castling privileges
+    if((iRow === 0 && iCol === 0) || (fRow === 0 && fCol === 0)) {
+      this.wqcastle = false;
+    }
+    if((iRow === 0 && iCol === 7) || (fRow === 0 && fCol === 7)) {
+      this.wkcastle = false;
+    }
+    if((iRow === 7 && iCol === 0) || (fRow === 7 && fCol === 0)) {
+      this.bqcastle = false;
+    }
+    if((iRow === 7 && iCol === 7) || (fRow === 7 && fCol === 7)) {
+      this.bkcastle = false;
+    }
     //check for promotion
     if(this.pieceAt(iRow, iCol) === Piece.W_PAWN && fRow === 7) {
       this.board.setPieceAt(fRow, fCol, Piece.W_QUEEN);
@@ -190,6 +278,17 @@ class ChessBoard {
       else return [-1, 1];
     }
     return null;
+  }
+  //returns whether any pieces of color [color] attack the square [r, c].
+  //color is true for white, false for black.
+  isAttacked(r, c, color) {
+    for(let i = 0; i < 8; i++) {
+      for(let j = 0; j < 8; j++) {
+        if(this.pieceAt(i, j) < Piece.B_PAWN === color
+          && this.validMove(i, j, r, c)) return true;
+      }
+    }
+    return false;
   }
   //if the path from [iRow, iCol] to [fRow, fCol] is a horizontal, vertical, or
   //diagonal line, returns true if there are no pieces between [iRow, iCol] 

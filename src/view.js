@@ -41,7 +41,6 @@ function pieceToHTML(p) {
       default: throw "Incomplete case match";
     }
   })();
-  console.log(img_src);
   return <img src={img_src} alt="?"/>;
 }
 

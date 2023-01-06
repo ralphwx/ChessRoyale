@@ -6,20 +6,19 @@ class Lobby extends React.Component {
     super(props);
     this.manager = props.manager;
     this.socket = props.socket;
-    this.updater = setInterval(() => {
-      this.socket.emit("lobby", (data) => {this.updateLobby(data)});
+    this.socket.removeAllListeners();
+    this.lobbyUpdater = setInterval(() => {
+      this.socket.emit("lobby", (data) => {
+        this.updateLobby(data);
+      });
     }, 1000);
     this.state = {
       challenged: false,
     }
-    this.socket.removeAllListeners();
     this.socket.on("joined", (color) => {
       this.cancelChallenge();
-      clearInterval(this.updater);
+      clearInterval(this.lobbyUpdater);
       this.manager.changeState("game", color);
-    });
-    this.socket.on("disconnecting", () => {
-      this.socket.emit("cancel", () => {});
     });
   }
 

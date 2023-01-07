@@ -1,12 +1,17 @@
-const express = require("express");
-const app = express();
-const http = require("http");
-const server = http.createServer(app);
-const {Server} = require("socket.io");
+//const express = require("express");
+//const app = express();
+//const http = require("http");
+//const server = http.createServer(app);
+//const {Server} = require("socket.io");
+//const io = new Server(server);
+//const {ServerGame} = require("./game.cjs");
+//const {Piece, Color} = require("../enums.js");
+import {createServer} from "http";
+import {Server} from "socket.io";
+const server = createServer();
 const io = new Server(server);
-const {ServerGame} = require("./game.cjs");
-const {ChessGame} = require("../chess.js");
-const {Piece, Color} = require("../enums.js");
+import {ServerGame} from "./servergame.mjs";
+import {Color} from "../enums.mjs";
 
 const open_challenges = [];
 
@@ -44,8 +49,8 @@ function set_lobby(socket) {
   socket.on("cancel", (ack) => cancelChallenge(ack));
 
   socket.on("lobby", (ack) => {
-    output = [];
-    for([id, game] of open_challenges) {
+    let output = [];
+    for(let [id, game] of open_challenges) {
       output.push({
         id: id.id,
       });
@@ -56,7 +61,7 @@ function set_lobby(socket) {
   socket.on("join", (id) => {
     let index = find_challenge(id);
     if(socket.id === id || index === -1) return;
-    [csocket, game] = open_challenges[index];
+    let [csocket, game] = open_challenges[index];
     open_challenges.splice(index, 1);
     socket.emit("joined", Color.BLACK);
     csocket.emit("joined", Color.WHITE);
@@ -75,7 +80,7 @@ function set_game(socket, game, color) {
   game.addListener(socket);
 
   socket.on("move", (move, ack) => {
-    [iRow, iCol, fRow, fCol] = move;
+    let [iRow, iCol, fRow, fCol] = move;
     if(game.move(iRow, iCol, fRow, fCol, color)) {
       ack();
       for(let s of game.getListeners()) {

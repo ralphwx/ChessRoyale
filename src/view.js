@@ -1,4 +1,4 @@
-import {Piece, Color} from "./enums.js";
+import {Piece, Color} from "./enums.mjs";
 import img_null from "./img/null.png";
 import w_pawn from "./img/w_pawn.png";
 import w_rook from "./img/w_rook.png";

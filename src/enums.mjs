@@ -35,7 +35,4 @@ var MoveType = {
   INVALID: 4,
 }
 
-module.exports.Piece = Piece;
-module.exports.Color = Color;
-module.exports.colorOf = colorOf;
-module.exports.MoveType = MoveType;
+export {Piece, Color, colorOf, MoveType};

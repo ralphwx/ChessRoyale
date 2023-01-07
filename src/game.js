@@ -1,8 +1,8 @@
 import React from "react";
 import {BoardView} from "./view.js";
-import {ChessBoard} from "./chess.js";
+import {ChessBoard} from "./chess.mjs";
 import {ResourceBar} from "./resourcebar.js";
-import {Piece} from "./enums.js";
+import {Piece} from "./enums.mjs";
 import Stack from "react-bootstrap/Stack";
 /**
  * React component that displays a Chess Royale game, with the board, resource

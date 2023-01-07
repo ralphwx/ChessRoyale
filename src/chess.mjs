@@ -1,5 +1,5 @@
 
-const {Piece, Color, colorOf, MoveType} = require("./enums.js");
+import {Piece, Color, colorOf, MoveType} from "./enums.mjs";
 
 //8x8 board of Pieces
 class Board {
@@ -40,7 +40,7 @@ class Board {
  * constructor, but instead use either ChessBoard.startingPosition() or
  * ChessBoard.fromString() to construct chessboard instances.
  */
-export class ChessBoard {
+class ChessBoard {
   /**
    * Constructs an empty chess board.
    *
@@ -392,4 +392,4 @@ export class ChessBoard {
   }
 }
 
-module.exports.ChessBoard = ChessBoard;
+export {ChessBoard};

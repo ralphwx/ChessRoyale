@@ -1,6 +1,6 @@
 
-const {ChessBoard} = require("../chess.js");
-const {Piece, Color, colorOf, MoveType} = require("../enums.js");
+import {ChessBoard} from "../chess.mjs";
+import {Piece, Color, colorOf, MoveType} from "../enums.mjs";
 
 class ServerGame {
   constructor() {
@@ -66,4 +66,4 @@ class ServerGame {
   }
 }
 
-module.exports.ServerGame = ServerGame;
+export {ServerGame};

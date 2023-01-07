@@ -40,7 +40,7 @@ class Board {
  * constructor, but instead use either ChessBoard.startingPosition() or
  * ChessBoard.fromString() to construct chessboard instances.
  */
-class ChessBoard {
+export class ChessBoard {
   /**
    * Constructs an empty chess board.
    *

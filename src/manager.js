@@ -6,8 +6,8 @@ import io from "socket.io-client";
 class Manager extends React.Component {
   constructor(props) {
     super(props);
-    //this.socket = io("3.80.207.180:80", { transports:["websocket"]});
-    this.socket = io("localhost:80", { transports:["websocket"]});
+    this.socket = io("3.80.207.180:80", { transports:["websocket"]});
+    //this.socket = io("localhost:80", { transports:["websocket"]});
     this.state = {
       display: <Lobby manager={this} socket={this.socket}/>,
     }

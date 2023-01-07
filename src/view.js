@@ -1,4 +1,4 @@
-import {ChessBoard, Piece} from "./chess.js";
+import {Piece, Color} from "./enums.js";
 import img_null from "./img/null.png";
 import w_pawn from "./img/w_pawn.png";
 import w_rook from "./img/w_rook.png";
@@ -19,8 +19,7 @@ import b_king from "./img/b_king.png";
  */
 
 /**
- * Helper function for converting chess pieces to HTML. Later, the characters
- * will be replaced by images.
+ * Helper function for converting chess pieces to JSX components.
  */
 function pieceToHTML(p) {
   let img_src = (() => {
@@ -53,12 +52,22 @@ function pieceToHTML(p) {
  * 
  * props needs to have a field color. If white, displays the board from
  * white's perspective, if black, displays the board from black's perspective.
+ *
+ * props needs to have a field [delay], representing all the pieces are still
+ * on cooldown.
  */
 export function BoardView(props) {
-  var squares = []
-  if(props.color === "white") {
+  let now = Date.now();
+  function computeOpacity(i, j) {
+    for(let [r, c, t] of props.delay) {
+      if(i === r && c === j) return 0.7 * (now - t) / 1000;
+    }
+    return 1;
+  }
+  let squares = []
+  if(props.color === Color.WHITE) {
     for(let i = 7; i >= 0; i--) {
-      var row = [];
+      let row = [];
       for(let j = 0; j < 8; j++) {
         let type;
         if(i === props.selectRow && j === props.selectCol) type = "select";
@@ -69,13 +78,14 @@ export function BoardView(props) {
           onClick={(e) => {
             props.onClick(i, j);
           }}
+          opacity={computeOpacity(i, j)}
         />);
       }
       squares.push(<div className="gridrow">{row}</div>);
     }
-  } else if(props.color === "black") {
+  } else if(props.color === Color.BLACK) {
     for(let i = 0; i < 8; i++) {
-      var row = [];
+      let row = [];
       for(let j = 7; j >= 0; j--) {
         let type;
         if(i === props.selectRow && j === props.selectCol) type = "select";
@@ -86,6 +96,7 @@ export function BoardView(props) {
           onClick={(e) => {
             props.onClick(i, j);
           }}
+          opacity={computeOpacity(i, j)}
         />);
       }
       squares.push(<div className="gridrow">{row}</div>);
@@ -117,6 +128,7 @@ function Square(props) {
   return (
     <button className={"square"} onClick={props.onClick} style={{
       backgroundColor: color,
+      opacity: props.opacity,
     }}>
       {props.id}
     </button>

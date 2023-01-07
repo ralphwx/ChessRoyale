@@ -1,5 +1,7 @@
 
-const {ChessBoard, Piece} = require("../chess.js");
+const {ChessBoard} = require("../chess.js");
+const {Piece, Color, colorOf, MoveType} = require("../enums.js");
+
 class ServerGame {
   constructor() {
     //ServerGame tracks the board state, everyone who needs board updates,
@@ -15,8 +17,8 @@ class ServerGame {
   }
 
   setReady(color) {
-    if(color === "black") this.bready = true;
-    else if(color === "white") this.wready = true;
+    if(color === Color.BLACK) this.bready = true;
+    else if(color === Color.WHITE) this.wready = true;
     else throw "Incomplete case match " + color;
   }
 
@@ -24,12 +26,11 @@ class ServerGame {
     return this.bready && this.wready;
   }
 
-  //color is true for white, false for black
   move(iRow, iCol, fRow, fCol, color) {
     if(this.gameOver().gameOver) return false;
     if(!this.bothReady()) return false;
-    if(this.board.validMove(iRow, iCol, fRow, fCol) 
-      && this.board.pieceAt(iRow, iCol) >= Piece.B_PAWN !== color) {
+    if(this.board.moveType(iRow, iCol, fRow, fCol) !== MoveType.INVALID
+      && colorOf(this.board.pieceAt(iRow, iCol)) === color) {
       this.board.move(iRow, iCol, fRow, fCol);
       return true;
     }

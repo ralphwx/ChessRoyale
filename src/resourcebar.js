@@ -23,7 +23,7 @@ function ResourceSquare(props) {
   let opacity;
   if(props.amount >= 1) opacity = 1;
   else if(props.amount <= 0) opacity = 0;
-  else opacity = 0.3 + 0.4 * props.amount;
+  else opacity = 0.7 * props.amount;
   return <div className="resource" style={{
       background:"rgba(170, 0, 170, " + opacity + ")"}}></div>;
 }

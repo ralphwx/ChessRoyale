@@ -1,6 +1,10 @@
 import React from "react";
 import {Game} from "./game.js";
 import "./index.css";
+
+/**
+ * React Component displaying the Lobby.
+ */
 class Lobby extends React.Component {
   constructor(props) {
     super(props);
@@ -61,17 +65,17 @@ class Lobby extends React.Component {
     let challengeButton;
     if(this.state.challenged) {
       challengeButton = 
-        <button onClick={() => this.cancelChallenge()}>
+        <button className="ctrl" onClick={() => this.cancelChallenge()}>
           Cancel
         </button>;
     } else {
       challengeButton = 
-        <button onClick={() => this.createChallenge()}>
+        <button className="ctrl" onClick={() => this.createChallenge()}>
           Create Challenge
         </button>
     }
     return <div>
-      <h1>Lobby</h1>
+      <h2>My user ID is {this.socket.id}</h2>
       <div className="main_display">{display}</div>
       <div className="button_row">
         {challengeButton}

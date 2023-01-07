@@ -5,7 +5,8 @@ const server = http.createServer(app);
 const {Server} = require("socket.io");
 const io = new Server(server);
 const {ServerGame} = require("./game.cjs");
-const {ChessGame, Piece} = require("../chess.js");
+const {ChessGame} = require("../chess.js");
+const {Piece, Color} = require("../enums.js");
 
 const open_challenges = [];
 
@@ -25,6 +26,13 @@ function set_lobby(socket) {
   console.log(socket.id + " joined the lobby");
   socket.removeAllListeners();
 
+  function cancelChallenge(ack) {
+    let i = find_challenge(socket.id);
+    if(i !== -1) {
+      open_challenges.splice(i, 1);
+      ack();
+    }
+  }
   socket.on("create", (ack) => {
     //create new challenge
     if(find_challenge(socket.id) === -1) {
@@ -33,14 +41,7 @@ function set_lobby(socket) {
     }
   });
 
-  socket.on("cancel", (ack) => {
-    //cancel the challenge
-    let i = find_challenge(socket.id);
-    if(i !== -1) {
-      open_challenges.splice(i, 1);
-      ack();
-    }
-  });
+  socket.on("cancel", (ack) => cancelChallenge(ack));
 
   socket.on("lobby", (ack) => {
     output = [];
@@ -57,10 +58,14 @@ function set_lobby(socket) {
     if(socket.id === id || index === -1) return;
     [csocket, game] = open_challenges[index];
     open_challenges.splice(index, 1);
-    socket.emit("joined", "black");
-    csocket.emit("joined", "white");
-    set_game(socket, game, "black");
-    set_game(csocket, game, "white");
+    socket.emit("joined", Color.BLACK);
+    csocket.emit("joined", Color.WHITE);
+    set_game(socket, game, Color.BLACK);
+    set_game(csocket, game, Color.WHITE);
+  });
+
+  socket.on("disconnect", () => {
+    cancelChallenge(() => {});
   });
 }
 
@@ -71,7 +76,7 @@ function set_game(socket, game, color) {
 
   socket.on("move", (move, ack) => {
     [iRow, iCol, fRow, fCol] = move;
-    if(game.move(iRow, iCol, fRow, fCol, (color === "white"))) {
+    if(game.move(iRow, iCol, fRow, fCol, color)) {
       ack();
       for(let s of game.getListeners()) {
         s.emit("board", game.boardState());
@@ -97,6 +102,9 @@ function set_game(socket, game, color) {
   socket.on("leave", () => {
     console.log(socket.id + "left game");
     set_lobby(socket);
+    game.removeListener(socket);
+  });
+  socket.on("disconnect", () => {
     game.removeListener(socket);
   });
   socket.emit("board", game.boardState());

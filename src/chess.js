@@ -1,22 +1,9 @@
 
-var Piece = {
-  NULL: 0,
-  W_PAWN: 1,
-  W_ROOK: 2,
-  W_KNIGHT: 3,
-  W_BISHOP: 4,
-  W_QUEEN: 5,
-  W_KING: 6,
-  B_PAWN: 7,
-  B_ROOK: 8,
-  B_KNIGHT: 9,
-  B_BISHOP: 10,
-  B_QUEEN: 11,
-  B_KING: 12,
-}
+const {Piece, Color, colorOf, MoveType} = require("./enums.js");
 
-//8x8 board of pieces.
+//8x8 board of Pieces
 class Board {
+  //constructs an empty board
   constructor() {
     this.data = [];
     for(let i = 0; i < 8; i++) {
@@ -27,9 +14,6 @@ class Board {
       this.data.push(arr);
     }
   }
-  //returns the piece at row r and column c. ' ' represents an empty square,
-  //k for king, q for queen, b for bishop, n for knight, r for rook, p for
-  //pawn, captial letter for white pieces, lowercase letter for black pieces
   pieceAt(r, c) {
     this.assertBounds(r, c);
     return this.data[r][c];
@@ -49,11 +33,18 @@ class Board {
   }
 }
 
+/**
+ * Representation of a chess board, with its pieces and game state.
+ * By convention, row 0 is the first rank, row 7 is the eigth rank. Col 0 is
+ * the a-file, col 7 is the h-file. Client classes should not use the
+ * constructor, but instead use either ChessBoard.startingPosition() or
+ * ChessBoard.fromString() to construct chessboard instances.
+ */
 class ChessBoard {
-  //convention: row 0 corresponds to the first rank, row 7 corresponds to the
-  //eigth rank. col 0 corresponds to the a-file, col 7 corresponds to the h-file
-  //constructs an empty chess board. Client classes should use either
-  //ChessBoard.fromString() or ChessBoard.startingPosition().
+  /**
+   * Constructs an empty chess board.
+   *
+   */
   constructor() {
     this.board = new Board();
     this.wkcastle = true;
@@ -61,8 +52,20 @@ class ChessBoard {
     this.bkcastle = true;
     this.bqcastle = true;
   }
+  /**
+   * Returns a string representation of this object, which can then be used to
+   * reconstruct this object with ChessBoard.fromString();
+   * Guaranteed that ChessBoard.fromString(this.toString()) will be a deep copy
+   * of [this].
+   */
   toString() {
     let output = []
+    output.push(" ");
+    output.push(" ");
+    output.push(this.wkcastle ? "1" : "0");
+    output.push(this.wqcastle ? "1" : "0");
+    output.push(this.bkcastle ? "1" : "0");
+    output.push(this.bqcastle ? "1" : "0");
     for(let r = 0; r < 8; r++) {
       for(let c = 0; c < 8; c++) {
         output.push(this.board.pieceAt(r, c).toString(16));
@@ -70,16 +73,27 @@ class ChessBoard {
     }
     return output.join("");
   }
+  /**
+   * Constructs and returns a new ChessBoard object from the string
+   * representation [str].
+   */
   static fromString(str) {
     let output = new ChessBoard();
-    if(str.length != 64) throw "Incorrect string length, " + str.length;
+    output.wkcastle = output[2] === "1";
+    output.wqcastle = output[3] === "1";
+    output.bkcastle = output[4] === "1";
+    output.bqcastle = output[5] === "1";
     for(let i = 0; i < 8; i++) {
       for(let j = 0; j < 8; j++) {
-        output.board.setPieceAt(i, j, parseInt(str.charAt(8 * i + j), 16));
+        output.board.setPieceAt(i, j, parseInt(str.charAt(8 * i + j + 6), 16));
       }
     }
     return output;
   }
+  /**
+   * Constructs and returns a new ChessBoard object, initialized to the starting
+   * position.
+   */
   static startingPosition() {
     let output = new ChessBoard();
     output.board.setPieceAt(0, 0, Piece.W_ROOK);
@@ -104,160 +118,219 @@ class ChessBoard {
     output.board.setPieceAt(7, 7, Piece.B_ROOK);
     return output;
   }
-  validMove(iRow, iCol, fRow, fCol) {
+  /**
+   * Considers the move from [iRow, iCol] to [fRow, fCol] and returns its
+   * MoveType.
+   */
+  moveType(iRow, iCol, fRow, fCol) {
     this.board.assertBounds(iRow, iCol);
     this.board.assertBounds(fRow, fCol);
-    let black = this.pieceAt(iRow, iCol) >= Piece.B_PAWN;
-    let tblack = this.pieceAt(fRow, fCol) >= Piece.B_PAWN;
+    let iColor = colorOf(this.pieceAt(iRow, iCol));
+    let fColor = colorOf(this.pieceAt(fRow, fCol));
     //cannot capture your own piece
-    if(this.pieceAt(fRow, fCol) != Piece.NULL && black === tblack) return false;
+    if(iColor === fColor) return MoveType.INVALID;
     let step = this.getDirection(iRow, iCol, fRow, fCol);
     let pathCheck = this.checkPath(iRow, iCol, fRow, fCol);
     switch(this.pieceAt(iRow, iCol)) {
       case Piece.NULL:
-        return false;
+        return MoveType.INVALID; //cannot move empty square
       case Piece.W_ROOK:
       case Piece.B_ROOK:
-        return step !== null && step[0] * step[1] === 0 && pathCheck;
+        if(step === null || step[0] * step[1] || !pathCheck) {
+          return MoveType.INVALID;
+        } else if(fColor !== Color.NONE) return MoveType.CAPTURE;
+        else return MoveType.MOVE;
       case Piece.W_BISHOP:
       case Piece.B_BISHOP:
-        return step !== null && step[0] * step[1] !== 0 && pathCheck;
+        if(step === null || step[0] * step[1] === 0 || !pathCheck) {
+          return MoveType.INVALID;
+        } else if(fColor !== Color.NONE) return MoveType.CAPTURE;
+        else return MoveType.MOVE;
       case Piece.W_QUEEN:
       case Piece.B_QUEEN:
-        return step !== null && pathCheck;
+        if(step === null || !pathCheck) return MoveType.INVALID;
+        else if(fColor !== Color.NONE) return MoveType.CAPTURE;
+        else return MoveType.MOVE;
       case Piece.W_KING:
         if(iRow === 0 && fRow === 0 && fCol >= 6) {
-          return this.wkcastle
+          if(this.wkcastle
             && this.pieceAt(0, 5) === Piece.NULL 
             && this.pieceAt(0, 6) === Piece.NULL
             && this.pieceAt(0, 7) === Piece.W_ROOK
-            && !this.isAttacked(0, 4, false)
-            && !this.isAttacked(0, 5, false);
+            && !this.isAttacked(0, 4, Color.BLACK)
+            && !this.isAttacked(0, 5, Color.BLACK)) {
+            return MoveType.CASTLE;
+          }
+          return MoveType.INVALID;
         }
         if(iRow === 0 && fRow === 0 && fCol <= 2) {
-          return this.wqcastle
+          if(this.wqcastle
             && this.pieceAt(0, 3) === Piece.NULL
             && this.pieceAt(0, 2) === Piece.NULL
             && this.pieceAt(0, 1) === Piece.NULL
             && this.piece(0, 0) === Piece.W_ROOK
-            && !this.isAttacked(0, 4, false)
-            && !this.isAttacked(0, 3, false);
+            && !this.isAttacked(0, 4, Color.BLACK)
+            && !this.isAttacked(0, 3, Color.BLACK)) {
+            return MoveType.CASTLE;
+          }
+          return MoveType.INVALID;
         }
       case Piece.B_KING:
         if(iRow === 7 && fRow === 7 && fCol >= 6) {
-          return this.bkcastle
+          if(this.bkcastle
             && this.pieceAt(7, 5) === Piece.NULL
             && this.pieceAt(7, 6) === Piece.NULL
             && this.pieceAt(7, 7) === Piece.B_ROOK
-            && !this.isAttacked(7, 4, true)
-            && !this.isAttacked(7, 5, true);
+            && !this.isAttacked(7, 4, Color.WHITE)
+            && !this.isAttacked(7, 5, Color.WHITE)) {
+            return MoveType.CASTLE;
+          }
+          return MoveType.INVALID;
         }
         if(iRow === 7 && fRow === 7 && fCol <= 2) {
-          return this.bqcastle
+          if(this.bqcastle
             && this.pieceAt(7, 3) === Piece.NULL
             && this.pieceAt(7, 2) === Piece.NULL
             && this.pieceAt(7, 1) === Piece.NULL
             && this.pieceAt(7, 0) === Piece.B_ROOK
-            && !this.isAttacked(7, 4, true)
-            && !this.isAttacked(7, 3, true);
+            && !this.isAttacked(7, 4, Color.WHITE)
+            && !this.isAttacked(7, 3, Color.WHITE)) {
+            return MoveType.CASTLE;
+          }
+          return MoveType.INVALID;
         }
-        return step !== null 
-          && fRow === iRow + step[0] 
-          && fCol === iCol + step[1];
+        if(step === null || fRow !== iRow + step[0] || fCol !== iCol + step[1]){
+          return MoveType.INVALID;
+        } else if(fColor !== Color.NULL) return MoveType.CAPTURE;
+        else return MoveType.MOVE;
       case Piece.W_KNIGHT:
       case Piece.B_KNIGHT:
-        return step === null 
-          && Math.abs(fRow - iRow) + Math.abs(fCol - iCol) === 3;
+        if(step !== null 
+          || Math.abs(fRow - iRow) + Math.abs(fCol - iCol) === 3) {
+          return MoveType.INVALID;
+        } else if(fColor !== Color.NULL) return MoveType.CAPTURE;
+        else return MoveType.MOVE;
       case Piece.W_PAWN:
         if(fCol === iCol) {
-          return fRow === iRow + 1 || (iRow === 1 && fRow === 3);
+          if(fRow === iRow + 1 || (iRow === 1 && fRow === 3)) {
+            if(fRow === 7) return MoveType.PROMOTION;
+            return MoveType.MOVE;
+          } 
+          return MoveType.INVALID;
         }
         //assert target is black and it's only one step away
-        return tblack 
+        if(fColor === Color.BLACK
           && step !== null 
           && fRow === iRow + 1 
-          && fCol === iCol + step[1];
+          && fCol === iCol + step[1]) {
+          if(fRow === 7) return MoveType.PROMOTION;
+          return MoveType.CAPTURE;
+        } else return MoveType.INVALID;
       case Piece.B_PAWN:
         if(fCol === iCol) {
-          return fRow === iRow - 1 || (iRow === 6 && fRow === 4);
+          if(fRow === iRow - 1 || (iRow === 6 && fRow === 4)) {
+            if(fRow === 0) return MoveType.PROMOTION;
+            return MoveType.MOVE;
+          }
+          return MoveType.INVALID;
         }
-        return !tblack 
-          && this.pieceAt(fRow, fCol) !== Piece.NULL
+        if(fColor === Color.WHITE
           && step !== null 
           && fRow === iRow - 1 
-          && fCol === iCol + step[1];
+          && fCol === iCol + step[1]) {
+          if(fRow === 0) return MoveType.PROMOTION;
+          return MoveType.CAPTURE;
+        }
+        return MoveType.INVALID;
       default:
         throw "Incomplete case match";
     }
   }
+  /**
+   * Attempts to modify this ChessBoard by making the move that puts the piece
+   * on [iRow, iCol] to [fRow, fCol]. If the move is invalid, nothing happens.
+   */
   move(iRow, iCol, fRow, fCol) {
-    if(!this.validMove(iRow, iCol, fRow, fCol)) return;
-    //check for castling
-    if(this.pieceAt(iRow, iCol) === Piece.W_KING) {
-      this.wkcastle = false;
-      this.wqcastle = false;
-      if(fCol > iCol + 1) {
-        this.board.setPieceAt(0, 4, Piece.NULL);
-        this.board.setPieceAt(0, 5, Piece.W_ROOK);
-        this.board.setPieceAt(0, 6, Piece.W_KING);
-        this.board.setPieceAt(0, 7, Piece.NULL);
-        return;
-      }
-      if(fCol < iCol - 1) {
-        this.board.setPieceAt(0, 4, Piece.NULL);
-        this.board.setPieceAt(0, 3, Piece.W_ROOK);
-        this.board.setPieceAt(0, 2, Piece.W_KING);
-        this.board.setPieceAt(0, 0, Piece.NULL);
-        return;
-      }
-    }
-    if(this.pieceAt(iRow, iCol) === Piece.B_KING) {
-      this.bkcastle = false;
-      this.bqcastle = false;
-      if(fCol > iCol + 1) {
-        this.board.setPieceAt(7, 4, Piece.NULL);
-        this.board.setPieceAt(7, 5, Piece.B_ROOK);
-        this.board.setPieceAt(7, 6, Piece.B_KING);
-        this.board.setPieceAt(7, 7, Piece.NULL);
-        return;
-      }
-      if(fCol < iCol - 1) {
-        this.board.setPieceAt(7, 4, Piece.NULL);
-        this.board.setPieceAt(7, 3, Piece.B_ROOK);
-        this.board.setPieceAt(7, 2, Piece.B_KING);
-        this.board.setPieceAt(7, 0, Piece.NULL);
-        return;
-      }
-    }
-    //check castling privileges
+    let movetype = this.moveType(iRow, iCol, fRow, fCol);
+    if(movetype === MoveType.INVALID) return;
     if((iRow === 0 && iCol === 0) || (fRow === 0 && fCol === 0)) {
       this.wqcastle = false;
     }
     if((iRow === 0 && iCol === 7) || (fRow === 0 && fCol === 7)) {
       this.wkcastle = false;
     }
-    if((iRow === 7 && iCol === 0) || (fRow === 7 && fCol === 0)) {
+    if((iRow === 7 && iCol === 0) || (fRow === 7 && iCol === 0)) {
       this.bqcastle = false;
     }
-    if((iRow === 7 && iCol === 7) || (fRow === 7 && fCol === 7)) {
+    if((iRow === 7 && iCol === 7) || (fRow === 7 && iCol === 7)) {
       this.bkcastle = false;
     }
-    //check for promotion
-    if(this.pieceAt(iRow, iCol) === Piece.W_PAWN && fRow === 7) {
-      this.board.setPieceAt(fRow, fCol, Piece.W_QUEEN);
-    } else if(this.pieceAt(iRow, iCol) === Piece.B_PAWN && fRow === 0) {
-      this.board.setPieceAt(fRow, fCol, Piece.B_QUEEN);
-    } else {
-      this.board.setPieceAt(fRow, fCol, this.pieceAt(iRow, iCol));
+    if(iRow === 0 && iCol === 4) {
+      this.wkcastle = false;
+      this.wqcastle = false;
     }
-    this.board.setPieceAt(iRow, iCol, Piece.NULL);
+    if(iRow === 7 && iCol === 4) {
+      this.bkcastle = false;
+      this.bqcastle = false;
+    }
+    switch(movetype) {
+      case MoveType.INVALID: return;
+      case MoveType.CASTLE:
+        if(iRow === 0) {
+            this.wkcastle = false;
+            this.wqcastle = false;
+            this.board.setPieceAt(0, 4, Piece.NULL);
+          if(fCol > iCol) {
+            this.board.setPieceAt(0, 5, Piece.W_ROOK);
+            this.board.setPieceAt(0, 6, Piece.W_KING);
+            this.board.setPieceAt(0, 7, Piece.NULL);
+            return;
+          } else {
+            this.board.setPieceAt(0, 3, Piece.W_ROOK);
+            this.board.setPieceAt(0, 2, Piece.W_KING);
+            this.board.setPieceAt(0, 0, Piece.NULL);
+            return;
+          }
+        } else {
+          this.bkcastle = false;
+          this.bqcastle = false;
+          this.board.setPieceAt(7, 4, Piece.NULL);
+          if(fCol > iCol) {
+            this.board.setPieceAt(7, 5, Piece.B_ROOK);
+            this.board.setPieceAt(7, 6, Piece.B_KING);
+            this.board.setPieceAt(7, 7, Piece.NULL);
+            return;
+          } else {
+            this.board.setPieceAt(7, 3, Piece.B_ROOK);
+            this.board.setPieceAt(7, 2, Piece.B_KING);
+            this.board.setPieceAt(7, 0, Piece.NULL);
+          }
+        }
+      case MoveType.PROMOTION:
+        if(fRow === 7) {
+          this.board.setPieceAt(fRow, fCol, Piece.W_QUEEN);
+          this.board.setPieceAt(iRow, iCol, Piece.NULL);
+          return;
+        } else {
+          this.board.setPieceAt(fRow, fCol, Piece.B_QUEEN);
+          this.board.setPieceAt(iRow, iCol, Piece.NULL);
+          return;
+        }
+      case MoveType.MOVE:
+      case MoveType.CAPTURE:
+        this.board.setPieceAt(fRow, fCol, this.board.pieceAt(iRow, iCol));
+        this.board.setPieceAt(iRow, iCol, Piece.NULL);
+        return;
+      default: throw "Incomplete case match: " + movetype;
+    }
   }
-  //returns a pair [x, y] representing the direction [fRow, fCol] - [iRow, iCol]
-  //if it's a horizontal or vertical line, returns [1, 0], [-1, 0], [0, 1], or
-  //[0, -1] according to the direction of travel
-  //if it's a diagonal line, returns [1, 1], [1, -1], [-1, 1], or [-1, -1]
-  //according to the direction of travel
-  //else returns null
+  /**
+   * Returns a pair [x, y] where [x] and [y] are one of {1, 0, -1}, and there
+   * exists a positive integer n such that fRow === iRow + nx and
+   * fCol === iCol + ny. If no such [x, y] exist, then returns null. If
+   * [iRow, iCol] === [fRow, fCol] then behavior is undefined.
+   * Helper function for ChessBoard.moveType.
+   */
   getDirection(iRow, iCol, fRow, fCol) {
     let dx = fRow - iRow;
     let dy = fCol - iCol;
@@ -279,21 +352,26 @@ class ChessBoard {
     }
     return null;
   }
-  //returns whether any pieces of color [color] attack the square [r, c].
-  //color is true for white, false for black.
+  /**
+   * returns whether any pieces of color [color] attack the square [r, c].
+   * Helper function for ChessBoard.moveType
+   */
   isAttacked(r, c, color) {
     for(let i = 0; i < 8; i++) {
       for(let j = 0; j < 8; j++) {
-        if(this.pieceAt(i, j) < Piece.B_PAWN === color
+        if(colorOf(this.pieceAt(i, j)) === color
           && this.validMove(i, j, r, c)) return true;
       }
     }
     return false;
   }
-  //if the path from [iRow, iCol] to [fRow, fCol] is a horizontal, vertical, or
-  //diagonal line, returns true if there are no pieces between [iRow, iCol] 
-  //and [fRow, fCol]
-  //else returns false
+  /**
+   * Checks the path from [iRow, iCol] to [fRow, fCol], returns true if there
+   * are no pieces between [iRow, iCol] and [fRow, fCol], exclusive of the
+   * endpoints.
+   * 
+   * Helper function for ChessBoard.moveType
+   */
   checkPath(iRow, iCol, fRow, fCol) {
     let step = this.getDirection(iRow, iCol, fRow, fCol);
     if(step === null) return false;
@@ -306,10 +384,12 @@ class ChessBoard {
     }
     return true;
   }
+  /**
+   * Returns the piece at [r, c].
+   */
   pieceAt(r, c) {
     return this.board.pieceAt(r, c);
   }
 }
 
 module.exports.ChessBoard = ChessBoard;
-module.exports.Piece = Piece;

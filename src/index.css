@@ -53,3 +53,20 @@ img {
   margin-top: auto;
   margin-bottom: auto;
 }
+
+.ctrl {
+  width: 150px;
+  height: 50px;
+}
+
+.ctrl_column {
+  width: 150px;
+  padding-top: 280px;
+  margin-left: 10px;
+}
+
+.gamectrl {
+  width: 150px;
+  height: 50px;
+  margin-top: 30px;
+}

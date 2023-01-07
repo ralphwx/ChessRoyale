@@ -119,6 +119,6 @@ io.on("connection", (socket) => {
   set_lobby(socket);
 });
 
-server.listen(3000, () => {
-  console.log("Listening on *:3000");
+server.listen(8080, () => {
+  console.log("Listening on *:8080");
 });

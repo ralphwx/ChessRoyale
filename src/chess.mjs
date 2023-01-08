@@ -206,7 +206,7 @@ class ChessBoard {
       case Piece.W_KNIGHT:
       case Piece.B_KNIGHT:
         if(step !== null 
-          || Math.abs(fRow - iRow) + Math.abs(fCol - iCol) === 3) {
+          || Math.abs(fRow - iRow) + Math.abs(fCol - iCol) !== 3) {
           return MoveType.INVALID;
         } else if(fColor !== Color.NULL) return MoveType.CAPTURE;
         else return MoveType.MOVE;
@@ -274,7 +274,9 @@ class ChessBoard {
       this.bqcastle = false;
     }
     switch(movetype) {
-      case MoveType.INVALID: return;
+      case MoveType.INVALID: 
+        console.log("invalid move");
+        return;
       case MoveType.CASTLE:
         if(iRow === 0) {
             this.wkcastle = false;
@@ -304,6 +306,7 @@ class ChessBoard {
             this.board.setPieceAt(7, 3, Piece.B_ROOK);
             this.board.setPieceAt(7, 2, Piece.B_KING);
             this.board.setPieceAt(7, 0, Piece.NULL);
+	    return;
           }
         }
       case MoveType.PROMOTION:
@@ -360,7 +363,7 @@ class ChessBoard {
     for(let i = 0; i < 8; i++) {
       for(let j = 0; j < 8; j++) {
         if(colorOf(this.pieceAt(i, j)) === color
-          && this.validMove(i, j, r, c)) return true;
+          && this.moveType(i, j, r, c) !== MoveType.INVALID) return true;
       }
     }
     return false;

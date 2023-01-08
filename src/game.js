@@ -2,7 +2,7 @@ import React from "react";
 import {BoardView} from "./view.js";
 import {ChessBoard} from "./chess.mjs";
 import {ResourceBar} from "./resourcebar.js";
-import {Piece} from "./enums.mjs";
+import {Piece, colorOf, Color} from "./enums.mjs";
 import Stack from "react-bootstrap/Stack";
 /**
  * React component that displays a Chess Royale game, with the board, resource
@@ -20,7 +20,7 @@ class Game extends React.Component {
    * [ready] is a boolean indicating whether the user has indicated he/she is
    * ready to play.
    * [baseTime] is a system time in milliseconds such that 
-   * (Date.now() - baseTime) / 3000 is the number of resources the user has.
+   * (Date.now() - baseTime) / 4000 is the number of resources the user has.
    * 
    * This object's other state objects are [socket], [started], [barUpdater],
    * and [delay]
@@ -37,7 +37,7 @@ class Game extends React.Component {
    *
    * [delay] is list of row, col, time tuples. It records the last time a
    * piece controlled by this player landed on the square, and if that time
-   * was more than 1000 ms ago, that square is then removed. The delays are
+   * was more than 2000 ms ago, that square is then removed. The delays are
    * added to the end of the list and delays are removed from the beginning of
    * the list.
    * 
@@ -83,8 +83,8 @@ class Game extends React.Component {
       this.setState({ baseTime: time });
       this.barUpdater = setInterval(() => {
         let now = Date.now();
-        if(now - this.state.baseTime > 30000) {
-          this.setState({ baseTime: now - 30000 });
+        if(now - this.state.baseTime > 40000) {
+          this.setState({ baseTime: now - 40000 });
         } else this.setState({});
       }, 100);
     });
@@ -113,23 +113,25 @@ class Game extends React.Component {
   }
 
   onClick(i, j) {
-    if(this.state.selectRow === -1) {
-      if(this.state.board.pieceAt(i, j) !== Piece.NULL) {
-        this.setState({
-          selectRow: i,
-          selectCol: j,
-        });
-      }
-    } else {
+    //if you click a piece of your color, select it
+    //else if something was already selected, attempt to make a move
+    if(colorOf(this.state.board.pieceAt(i, j)) === this.color) {
+      this.setState({
+        selectRow: i,
+	selectCol: j,
+      });
+      return;
+    }
+    if(this.state.selectRow !== -1) {
       let now = Date.now();
-      if(now - this.state.baseTime < 3000) return;
+      if(now - this.state.baseTime < 4000) return;
       for(let index = 0; index < this.state.delay.length; index++) {
         let [r, c, t] = this.state.delay[index];
         if(r === this.state.selectRow && c === this.state.selectCol) {
-          if(now - t < 1000) return;
+          if(now - t < 2000) return;
           else break;
         }
-        if(now - t < 1000) break;
+        if(now - t < 2000) break;
       }
       this.socket.emit("move", [this.state.selectRow, this.state.selectCol,
         i, j], () => {
@@ -139,19 +141,20 @@ class Game extends React.Component {
             index--;
           }
           this.state.delay.push([i, j, now]);
-          this.setState({ baseTime: this.state.baseTime + 3000 });
+          this.setState({ baseTime: this.state.baseTime + 4000 });
       });
       this.setState({
         selectRow: -1,
         selectCol: -1,
       });
+      return;
     }
   }
 
   render() {
     let now = Date.now();
-    let amount = this.started ? (now - this.state.baseTime) / 3000 : 0;
-    while(this.state.delay.length > 0 && this.state.delay[2] < now - 1000) {
+    let amount = this.started ? (now - this.state.baseTime) / 4000 : 0;
+    while(this.state.delay.length > 0 && this.state.delay[2] < now - 2000) {
       this.state.delay.splice(0, 1);
     }
     let readyButton;

@@ -6,13 +6,16 @@
 //const io = new Server(server);
 //const {ServerGame} = require("./game.cjs");
 //const {Piece, Color} = require("../enums.js");
+import express from "express";
+const app = express();
 import {createServer} from "http";
 import {Server} from "socket.io";
-const server = createServer();
+const server = createServer(app);
 const io = new Server(server);
 import {ServerGame} from "./servergame.mjs";
 import {Color} from "../enums.mjs";
 
+app.use(express.static("../../build"));
 const open_challenges = [];
 
 //TODO: when the user disconnects, kick them out of the game?

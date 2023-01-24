@@ -51,6 +51,11 @@ class ChessBoard {
     this.wqcastle = true;
     this.bkcastle = true;
     this.bqcastle = true;
+    //en pesant rule: a pawn can be captured by ep if and only if that pawn
+    //was pushed two squares and that pawn move was the last move that occurred
+    //on the board
+    this.wep = -1;
+    this.bep = -1;
   }
   /**
    * Returns a string representation of this object, which can then be used to
@@ -60,8 +65,8 @@ class ChessBoard {
    */
   toString() {
     let output = []
-    output.push(" ");
-    output.push(" ");
+    output.push(this.wep === -1 ? " " : "" + this.wep);
+    output.push(this.bep === -1 ? " " : "" + this.bep);
     output.push(this.wkcastle ? "1" : "0");
     output.push(this.wqcastle ? "1" : "0");
     output.push(this.bkcastle ? "1" : "0");
@@ -79,6 +84,8 @@ class ChessBoard {
    */
   static fromString(str) {
     let output = new ChessBoard();
+    output.wep = output[0] === " " ? -1 : output[0] - "0";
+    output.bep = output[1] === " " ? -1 : output[1] - "0";
     output.wkcastle = output[2] === "1";
     output.wqcastle = output[3] === "1";
     output.bkcastle = output[4] === "1";
@@ -138,18 +145,15 @@ class ChessBoard {
       case Piece.B_ROOK:
         if(step === null || step[0] * step[1] || !pathCheck) {
           return MoveType.INVALID;
-        } else if(fColor !== Color.NONE) return MoveType.CAPTURE;
-        else return MoveType.MOVE;
+        } else return MoveType.MOVE;
       case Piece.W_BISHOP:
       case Piece.B_BISHOP:
         if(step === null || step[0] * step[1] === 0 || !pathCheck) {
           return MoveType.INVALID;
-        } else if(fColor !== Color.NONE) return MoveType.CAPTURE;
-        else return MoveType.MOVE;
+        } else return MoveType.MOVE;
       case Piece.W_QUEEN:
       case Piece.B_QUEEN:
         if(step === null || !pathCheck) return MoveType.INVALID;
-        else if(fColor !== Color.NONE) return MoveType.CAPTURE;
         else return MoveType.MOVE;
       case Piece.W_KING:
         if(iRow === 0 && fRow === 0 && fCol >= 6) {
@@ -201,47 +205,50 @@ class ChessBoard {
         }
         if(step === null || fRow !== iRow + step[0] || fCol !== iCol + step[1]){
           return MoveType.INVALID;
-        } else if(fColor !== Color.NULL) return MoveType.CAPTURE;
-        else return MoveType.MOVE;
+        } else return MoveType.MOVE;
       case Piece.W_KNIGHT:
       case Piece.B_KNIGHT:
         if(step !== null 
           || Math.abs(fRow - iRow) + Math.abs(fCol - iCol) !== 3) {
           return MoveType.INVALID;
-        } else if(fColor !== Color.NULL) return MoveType.CAPTURE;
-        else return MoveType.MOVE;
+        } else return MoveType.MOVE;
       case Piece.W_PAWN:
         if(fCol === iCol) {
-          if(fRow === iRow + 1 || (iRow === 1 && fRow === 3)) {
+          if(iRow === 1 && fRow === 3) return MoveType.PAWN_THRUST;
+          if(fRow === iRow + 1) {
             if(fRow === 7) return MoveType.PROMOTION;
             return MoveType.MOVE;
           } 
           return MoveType.INVALID;
         }
-        //assert target is black and it's only one step away
-        if(fColor === Color.BLACK
-          && step !== null 
-          && fRow === iRow + 1 
-          && fCol === iCol + step[1]) {
-          if(fRow === 7) return MoveType.PROMOTION;
-          return MoveType.CAPTURE;
-        } else return MoveType.INVALID;
+        //assert that the final square is one step away
+        if(step === null || fRow !== iRow + 1 || fCol !== iCol + step[1]) {
+          return MoveType.INVALID;
+        }
+        //check enpesant
+        if(iRow === 4 && fCol === this.wep) return MoveType.EN_PESANT;
+        //require it to be a capture
+        if(fColor !== Color.BLACK) return MoveType.INVALID;
+        if(fRow === 7) return MoveType.PROMOTION;
+        return MoveType.MOVE;
       case Piece.B_PAWN:
         if(fCol === iCol) {
-          if(fRow === iRow - 1 || (iRow === 6 && fRow === 4)) {
+          if(iRow === 6 && fRow === 4) {
+            return MoveType.PAWN_THRUST;
+          }
+          if(fRow === iRow - 1) {
             if(fRow === 0) return MoveType.PROMOTION;
             return MoveType.MOVE;
           }
           return MoveType.INVALID;
         }
-        if(fColor === Color.WHITE
-          && step !== null 
-          && fRow === iRow - 1 
-          && fCol === iCol + step[1]) {
-          if(fRow === 0) return MoveType.PROMOTION;
-          return MoveType.CAPTURE;
+        if(step === null || fRow !== iRow - 1 || fCol !== iCol + step[1]) {
+          return MoveType.INVALID;
         }
-        return MoveType.INVALID;
+        if(iRow === 3 && fCol === this.bep) return MoveType.EN_PESANT;
+        if(fColor !== Color.WHITE) return MoveType.INVALID;
+        if(fRow === 0) return MoveType.PROMOTION;
+        return MoveType.MOVE;
       default:
         throw "Incomplete case match";
     }
@@ -253,6 +260,8 @@ class ChessBoard {
   move(iRow, iCol, fRow, fCol) {
     let movetype = this.moveType(iRow, iCol, fRow, fCol);
     if(movetype === MoveType.INVALID) return;
+    this.wep = -1;
+    this.bep= -1;
     if((iRow === 0 && iCol === 0) || (fRow === 0 && fCol === 0)) {
       this.wqcastle = false;
     }
@@ -274,9 +283,6 @@ class ChessBoard {
       this.bqcastle = false;
     }
     switch(movetype) {
-      case MoveType.INVALID: 
-        console.log("invalid move");
-        return;
       case MoveType.CASTLE:
         if(iRow === 0) {
             this.wkcastle = false;
@@ -320,9 +326,26 @@ class ChessBoard {
           return;
         }
       case MoveType.MOVE:
-      case MoveType.CAPTURE:
         this.board.setPieceAt(fRow, fCol, this.board.pieceAt(iRow, iCol));
         this.board.setPieceAt(iRow, iCol, Piece.NULL);
+        return;
+      case MoveType.PAWN_THRUST:
+        if(iRow === 1) this.bep = iCol;
+        if(iRow === 7) this.wep = iCol;
+        this.board.setPieceAt(fRow, fCol, this.board.pieceAt(iRow, iCol));
+        this.board.setPieceAt(iRow, iCol, Piece.NULL);
+        return;
+      case MoveType.EN_PESANT:
+        if(iRow === 4) {
+          this.board.setPieceAt(fRow, fCol, this.board.pieceAt(iRow, iCol));
+          this.board.setPieceAt(iRow, iCol, Piece.NULL);
+          this.board.setPieceAt(4, fCol, Piece.NULL);
+          return;
+        }
+        if(iRow !== 3) throw "Assertion error";
+        this.board.setPieceAt(fRow, fCol, this.board.pieceAt(iRow, iCol));
+        this.board.setPieceAt(iRow, iCol, Piece.NULL);
+        this.board.setPieceAt(3, fCol, Piece.NULL);
         return;
       default: throw "Incomplete case match: " + movetype;
     }

@@ -29,10 +29,11 @@ function colorOf(piece) {
 
 var MoveType = {
   MOVE: 0,
-  CAPTURE: 1,
+  ENPESANT: 1,
   CASTLE: 2,
   PROMOTION: 3,
   INVALID: 4,
+  PAWN_THRUST: 5,
 }
 
 export {Piece, Color, colorOf, MoveType};

@@ -1,6 +1,8 @@
 import React from "react";
-import {Game} from "./game.js";
+import ReactDOM from "react-dom/client";
 import "./index.css";
+import io from "socket.io-client";
+import {URL} from "enums.mjs";
 
 /**
  * React Component displaying the Lobby.
@@ -8,9 +10,7 @@ import "./index.css";
 class Lobby extends React.Component {
   constructor(props) {
     super(props);
-    this.manager = props.manager;
-    this.socket = props.socket;
-    this.socket.removeAllListeners();
+    this.socket = io(URL, { transports:["websocket"] });
     this.lobbyUpdater = setInterval(() => {
       this.socket.emit("lobby", (data) => {
         this.updateLobby(data);
@@ -18,11 +18,13 @@ class Lobby extends React.Component {
     }, 1000);
     this.state = {
       challenged: false,
+      display: "Loading ...",
     }
     this.socket.on("joined", (color) => {
       this.cancelChallenge();
       clearInterval(this.lobbyUpdater);
-      this.manager.changeState("game", color);
+      alert("game joined, TODO");
+      window.location.replace(URL + "/game");
     });
   }
 
@@ -58,10 +60,6 @@ class Lobby extends React.Component {
   }
 
   render() {
-    let display = "Loading ...";
-    if(this.state !== null && this.state.display !== undefined) {
-      display = this.state.display;
-    }
     let challengeButton;
     if(this.state.challenged) {
       challengeButton = 
@@ -76,7 +74,7 @@ class Lobby extends React.Component {
     }
     return <div>
       <h2>My user ID is {this.socket.id}</h2>
-      <div className="main_display">{display}</div>
+      <div className="main_display">{this.state.display}</div>
       <div className="button_row">
         {challengeButton}
       </div>

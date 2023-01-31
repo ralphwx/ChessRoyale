@@ -1,21 +1,28 @@
-//const express = require("express");
-//const app = express();
-//const http = require("http");
-//const server = http.createServer(app);
-//const {Server} = require("socket.io");
-//const io = new Server(server);
-//const {ServerGame} = require("./game.cjs");
-//const {Piece, Color} = require("../enums.js");
+
+//backend code to be run in NodeJS
+
+//set up express
 import express from "express";
 const app = express();
 import {createServer} from "http";
-import {Server} from "socket.io";
 const server = createServer(app);
+
+app.use(express.static("../../main"));
+
+app.get("/", (req, res) => {
+  res.sendFile("/Users/rwx/JS/chessroyale/main/index.html");
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile("/Users/rwx/JS/chessroyale/main/login/index.html");
+});
+
+//set up socket.io
+import {Server} from "socket.io";
 const io = new Server(server);
 import {ServerGame} from "./servergame.mjs";
 import {Color} from "../enums.mjs";
 
-app.use(express.static("../../build"));
 const open_challenges = [];
 
 //TODO: when the user disconnects, kick them out of the game?

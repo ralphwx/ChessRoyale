@@ -7,7 +7,6 @@ class ServerGame {
     //ServerGame tracks the board state, everyone who needs board updates,
     //who's ready
     this.board = ChessBoard.startingPosition();
-    this.listeners = [];
     this.wready = false;
     this.bready = false;
   }
@@ -35,19 +34,6 @@ class ServerGame {
       return true;
     }
     return false;
-  }
-
-  addListener(socket) {
-    this.listeners.push(socket);
-  }
-
-  removeListener(socket) {
-    let index = this.listeners.indexOf(socket);
-    if(index !== -1) this.listeners.splice(index, 1);
-  }
-
-  getListeners() {
-    return this.listeners;
   }
 
   gameOver() {

@@ -42,6 +42,10 @@ os.system("mv " + jsoutput + " main/" + outdir + "index.js")
 csslist = find_by_extension("build/static/css/", ".css")
 if len(csslist) > 0: 
     os.system("mv " + csslist[0] + " main/" + outdir + "index.css")
+    maplist = find_by_extension("build/static/css/", ".map")
+    os.system("mv " + maplist[0] + " main/" + outdir + maplist[0][17:])
+maplist = find_by_extension("build/static/js/", ".map")
+os.system("mv " + maplist[0] + " main/" + outdir + maplist[0][16:])
 with open("main/" + outdir + "index.html", "w") as f:
     f.write("<!DOCTYPE html>\n")
     f.write("<html lang='en'>\n")

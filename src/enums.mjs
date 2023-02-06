@@ -36,5 +36,5 @@ var MoveType = {
   PAWN_THRUST: 5,
 }
 
-var URL = "localhost:8080";
+var URL = "http://localhost:8080";
 export {Piece, Color, colorOf, MoveType, URL};

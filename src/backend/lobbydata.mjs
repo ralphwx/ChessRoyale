@@ -1,11 +1,4 @@
 
-//LobbyData keeps track of the set of open challenges, private challenges,
-//the set of games underway
-//also need a map of usernames to sockets
-//for simplicity, allow each user to have only one socket at a time
-//for simplicity, if a user disconnects, then don't worry about it
-//and if a game goes longer than 10 minutes, then call it a draw.
-
 class LobbyData {
   constructor() {
     this.openChallenges = [];
@@ -60,9 +53,6 @@ class LobbyData {
       return true;
     }
     return false;
-  }
-  userDisconnected(user) {
-    this.cancelChallenge(user);
   }
   getBoard(user) {
     let i = this.gameIndex();

@@ -153,46 +153,32 @@ class LobbyView extends React.Component {
   updateLobby(data) {
     this.setState({lobbyData: data});
   }
-
+  
+  getType(challenge) {
+    if(challenge.sender === this.user()) {
+      if(challenge.receiver.length === 0) return RowType.OUTGOING_PUBLIC;
+      return RowType.OUTGOING_PRIVATE;
+    }
+    if(challenge.receiver.length === 0) return RowType.INCOMING_PUBLIC;
+    return RowType.INCOMING_PRIVATE;
+  }
   renderLobby(data) {
     if(data === null) {
-      return "Loading...";
+      return <LobbyRow key="#loading" type={RowType.LOADING} />
     }
     if(data.length === 0) {
-      return <LobbyRow type={RowType.NO_CHALLENGES} />
+      return <LobbyRow key="#empty" type={RowType.NO_CHALLENGES} />
     }
     let output = [];
     for(let challenge of data) {
-      if(challenge.sender === this.user()) {
-        if(challenge.receiver.length === 0) {
-          output.push(<LobbyRow 
-            challenger={this.user()}
-            challengerElo={challenge.senderElo}
-            type={RowType.OUTGOING_PUBLIC}
-          />);
-        } else {
-          output.push(<LobbyRow
-            challenger={this.user()}
-            challengerElo={challenge.senderElo}
-            type={RowType.OUTGOING_PRIVATE}
-            opponent={challenge.receiver}
-          />);
-        }
-      } else {
-        if(challenge.receiver.length === 0) {
-          output.push(<LobbyRow
-            challenger={challenge.sender}
-            challengerElo={challenge.senderElo}
-            type={RowType.INCOMING_PUBLIC}
-          />);
-        } else {
-          output.push(<LobbyRow
-            challenger={challenge.sender}
-            challengerElo={challenge.senderElo}
-            type={RowType.INCOMING_PRIVATE}
-          />);
-        }
-      }
+      let type = this.getType(challenge)
+      output.push(<LobbyRow
+        key={challenge.sender}
+        challenger={challenge.sender}
+        challengerElo={challenge.senderElo}
+        type={type}
+        opponent={challenge.receiver}
+      />);
     }
     return output;
   }
@@ -203,9 +189,7 @@ class LobbyView extends React.Component {
 
   render() {
     let data = this.state.lobbyData;
-    console.log(data);
     let lobby = this.renderLobby(this.state.lobbyData);
-    console.log(lobby);
     return <div>
       <HeaderRow />
       <div className="main_display">{lobby}</div>
@@ -218,5 +202,14 @@ class LobbyView extends React.Component {
   }
 }
 
+class FakeLobbyRow extends React.Component {
+  constructor(props) {
+    super(props);
+    this.text = props.text;
+  }
+  render() {
+    return <div>{this.text}</div>
+  }
+}
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<LobbyView />);

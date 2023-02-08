@@ -86,10 +86,10 @@ class LobbyRow extends React.Component {
       </div>
     }
     if(this.state.type === RowType.LOADING) {
-      return <div className="floater" style={{
-        margin: "5px"
+      return <div className="roomli" style={{
+        border: "2px solid lightgray",
       }}>
-        {"Loading ..."}
+        <div className="floater">{"Loading ..."}</div>
       </div>;
     }
     let color = this.getColor();

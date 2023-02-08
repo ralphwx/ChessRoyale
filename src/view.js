@@ -40,7 +40,7 @@ function pieceToHTML(p) {
       default: throw "Incomplete case match";
     }
   })();
-  return <img src={img_src} alt="?"/>;
+  return <img className="chesspiece" src={img_src} alt="?"/>;
 }
 
 /**

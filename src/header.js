@@ -12,15 +12,15 @@ class HeaderRow extends React.Component {
     let username = JSON.parse(localStorage.getItem("username"));
     let userbox = <div></div>;
     if(username !== null) {
-      userbox = <div>
+      userbox = <div style={{fontSize:"30px"}}>
         Logged in as {username}
         <br/>
-        <button onClick={() => this.logout()}>Log out</button>
+        <button id="logout" onClick={() => this.logout()}>Log out</button>
       </div>
     }
     return <div id="header_row">
-      {userbox}
-      <img src={logo} id="logo" alt="?"/>
+      <div className="userwrapper" style={{width: "50%"}}>{userbox}</div>
+      <div className="logowrapper"><img src={logo} id="logo" alt="?"/></div>
     </div>
   }
 }

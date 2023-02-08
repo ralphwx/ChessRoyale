@@ -26,20 +26,38 @@ import {UserManager} from "./users.mjs";
 let lobbydata = new LobbyData();
 
 let users = new UserManager("./users");
-//TODO: add the acknowledgement function calls when making client side.
-//Lobby side requests
-authserver.addEventHandler("open_challenge", (user, args, ack) => {
+
+//attempts to make an open challenge, does nothing if unsuccessful
+authserver.addEventHandler("open_challenge", (user) => {
   lobbydata.makeOpenChallenge(user);
 });
+
+//attempts to make a private challenge. Requires args to have a field [opponent]
+// representing the receiver of the challenge. ack is the callback function,
+// takes a boolean argument: true if the challenge creation was successful
+// ie, whether the opponent exists, false otherwise.
 authserver.addEventHandler("private_challenge", (user, args, ack) => {
-  lobbydata.makePrivateChallenge(user, args.opponent);
+  if(users.userExists(args.opponent)) {
+    lobbydata.makePrivateChallenge(user, args.opponent);
+    ack(true);
+  } else ack(false);
 });
-authserver.addEventHandler("cancel_challenge", (user, args, ack) => {
+
+//attempts to cancel the existing challenge, does nothing if unsuccessful.
+authserver.addEventHandler("cancel_challenge", (user) => {
   lobbydata.cancelChallenge(user);
 });
-authserver.addEventHandler("join", (user, args, ack) => {
-  lobbydata.attemptJoin(user, args.opponent);
+
+//attempts to join the challenge created by args.oppoent. Requires args to have
+//a field opponent.
+authserver.addEventHandler("join", (user, args) => {
+  let result = lobbydata.attemptJoin(user, args.opponent);
+  if(result) {
+    authserver.notify(user, "joined");
+    authserver.notify(args.opponent, "joined");
+  }
 });
+
 //calls ack with lobby data for the given user as a list of objects, sorted in
 //the order: outgoing challenge, incoming private challenges, then public
 //challenges.
@@ -51,36 +69,7 @@ authserver.addEventHandler("join", (user, args, ack) => {
 //    receiverElo: [receiver's elo]
 //  }
 authserver.addEventHandler("lobby", (user, args, ack) => {
-  //data = lobbydata.getLobbyData(user);
-  let data = [
-    {
-      sender: user,
-      senderElo: users.getElo(user),
-      receiver: "Arturo",
-      receiverElo: 2015,
-    },
-    {
-      sender: "jtsub",
-      senderElo: 1951,
-      receiver: user,
-      receiverElo: users.getElo(user),
-    },
-    {
-      sender: "tiny25",
-      senderElo: 1880,
-      receiver: "",
-    },
-    {
-      sender: "mmock721",
-      senderElo: 722,
-      receiver: "",
-    }
-  ]
-  if(Math.random() < 0.5) {
-    let temp = data[2];
-    data[2] = data[1];
-    data[1] = temp;
-  }
+  let data = lobbydata.getLobbyData(user);
   ack(data);
 });
 

@@ -26,20 +26,6 @@ class LobbyRow extends React.Component {
       onClick: props.onClick,
     }
   }
-  hash() {
-    if(this.state.type === RowType.NO_CHALLENGES) return 0;
-    if(this.state.type === RowType.LOADING) return 1;
-    let str = this.state.challenger + "#" + this.state.challengerElo + "#" + 
-      this.state.type + "#";
-    if(this.state.opponent) str += this.state.opponent;
-    let output = 0;
-    for(let i = 0; i < str.length; i++) {
-      output *= 31;
-      output += str.charCodeAt(i);
-    }
-    console.log("computed hash: " + output);
-    return output;
-  }
   onMouseEnter() {
     this.setState({highlight:true});
   }
@@ -124,6 +110,7 @@ class LobbyRow extends React.Component {
     </div>
   }
 }
+
 class LobbyView extends React.Component {
   constructor(props) {
     super(props);
@@ -140,6 +127,9 @@ class LobbyView extends React.Component {
             this.updateLobby(data);
           });
         }, 1000);
+        this.socket.addEventHandler("joined", (user, args) => {
+          window.location.replace(URL + "/game");
+        });
       }, 
       () => {
         window.location.replace(URL + "/login");
@@ -162,6 +152,24 @@ class LobbyView extends React.Component {
     if(challenge.receiver.length === 0) return RowType.INCOMING_PUBLIC;
     return RowType.INCOMING_PRIVATE;
   }
+
+  computeOnClick(challenge, type) {
+    switch(type) {
+      case RowType.OUTGOING_PRIVATE:
+      case RowType.OUTGOING_PUBLIC:
+        return () => {this.socket.notify("cancel_challenge", {})};
+      case RowType.INCOMING_PRIVATE:
+      case RowType.INCOMING_PUBLIC:
+        return () => {
+          this.socket.notify("join", {opponent: challenge.sender});
+        };
+      case RowType.LOADING:
+      case RowType.NO_CHALLENGES: 
+        return () => {};
+      default: throw "Incomplete case match: " + type;
+    }
+  }
+
   renderLobby(data) {
     if(data === null) {
       return <LobbyRow key="#loading" type={RowType.LOADING} />
@@ -172,12 +180,14 @@ class LobbyView extends React.Component {
     let output = [];
     for(let challenge of data) {
       let type = this.getType(challenge)
+      let onClick = this.computeOnClick(challenge, type);
       output.push(<LobbyRow
         key={challenge.sender}
         challenger={challenge.sender}
         challengerElo={challenge.senderElo}
         type={type}
         opponent={challenge.receiver}
+        onClick={() => {onClick()}}
       />);
     }
     return output;
@@ -187,6 +197,17 @@ class LobbyView extends React.Component {
     return JSON.parse(localStorage.getItem("username"));
   }
 
+  privateChallenge() {
+    let opponent = prompt("Who would you like to challenge?");
+    this.socket.notify("private_challenge", {opponent: opponent}, (result) => {
+      if(!result) alert("User " + opponent + " does not exist");
+    });
+  }
+
+  displayHowTo() {
+    alert("Unimplemented");
+  }
+
   render() {
     let data = this.state.lobbyData;
     let lobby = this.renderLobby(this.state.lobbyData);
@@ -194,22 +215,21 @@ class LobbyView extends React.Component {
       <HeaderRow />
       <div className="main_display">{lobby}</div>
       <div className="button_row">
-        <button className="ctrl">Create open challenge</button>
-        <button className="ctrl">Create private challenge</button>
-        <button className="ctrl">How to play</button>
+        <button 
+          className="ctrl" 
+          onClick={() => {this.socket.notify("open_challenge")}}>
+            Create open challenge
+        </button>
+        <button className="ctrl" onClick={() => this.privateChallenge()}>
+          Create private challenge
+        </button>
+        <button className="ctrl" onClick={() => this.displayHowTo()}>
+          How to play
+        </button>
       </div>
     </div>
   }
 }
 
-class FakeLobbyRow extends React.Component {
-  constructor(props) {
-    super(props);
-    this.text = props.text;
-  }
-  render() {
-    return <div>{this.text}</div>
-  }
-}
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<LobbyView />);

@@ -62,6 +62,12 @@ class AuthServer {
       socket.emit(event, data);
     }
   }
+
+  //returns whether the user [user] is online. If the user does not exist, then
+  //returns false.
+  isOnline(user) {
+    return this.socketmap.get(user).length > 0;
+  }
 }
 
 export {AuthServer};

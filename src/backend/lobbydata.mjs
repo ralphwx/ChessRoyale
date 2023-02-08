@@ -1,25 +1,67 @@
 
+import {UserManager} from "./users.mjs";
+import {ServerGame} from "./servergame.mjs";
+import {SocketManager} from "./socketmanager.mjs";
+
+let users = new UserManager("./users/");
 class LobbyData {
   constructor() {
     this.openChallenges = [];
-    this.privateChallenges = [];
-    this.games = [];
+    this.privateSenders = new Map();
+    this.privateReceivers = new SocketManager();
+    this.games = new Map();
   }
-  gameIndex(user) {
-    for(let i = 0; i < this.games.length; i++) {
-      if(this.games[i][0] === user || this.games[i][1] === user) return true;
+  getLobbyData(user) {
+    let output = [];
+    //first check if the user sent out a challenge
+    if(this.openChallenges.indexOf(user) !== -1) {
+      output.push({
+        sender: user,
+        senderElo: users.getElo(user),
+        receiver: "",
+      });
     }
-    return false;
+    let privateOpponent = this.privateSenders.get(user);
+    if(privateOpponent !== undefined) {
+      output.push({
+        sender: user,
+        senderElo: users.getElo(user),
+        receiver: privateOpponent,
+        receiverElo: users.getElo(privateOpponent),
+      });
+    }
+    //next check for private challenges going to the user
+    for(let sender of this.privateReceivers.get(user)) {
+      output.push({
+        sender: sender,
+        senderElo: users.getElo(sender),
+        receiver: user,
+        receiverElo: users.getElo(user),
+      });
+    }
+    //next add all public challenges
+    for(let sender of this.openChallenges) {
+      if(sender !== user) {
+        output.push({
+          sender: sender,
+          senderElo: users.getElo(sender),
+          receiver: "",
+        });
+      }
+    }
+    return output;
   }
   makeOpenChallenge(user) {
-    if(this.gameIndex(user) === -1) return false;
-    cancelChallenge(user);
+    if(this.games.get(user) !== undefined) return;
+    if(this.openChallenges.indexOf(user) !== -1) return;
+    this.cancelChallenge(user);
     this.openChallenges.push(user);
   }
   makePrivateChallenge(user, opponent) {
-    if(this.gameIndex(user) === -1) return false;
-    cancelChallenge(user);
-    this.privateChallenges.push([user, opponent]);
+    if(this.games.get(user) !== undefined) return;
+    this.cancelChallenge(user);
+    this.privateSenders.set(user, opponent);
+    this.privateReceivers.add(opponent, user);
   }
   cancelChallenge(user) {
     let index = this.openChallenges.indexOf(user);
@@ -27,29 +69,20 @@ class LobbyData {
       this.openChallenges.splice(index, 1);
       return;
     }
-    for(let i = 0; i < this.privateChallenges.length; i++) {
-      if(this.privateChallenges[i][0] === user) {
-        this.privateChallenges.splice(i, 1);
-        return;
-      }
+    let privateOpponent = this.privateSenders.get(user);
+    if(privateOpponent !== undefined) {
+      this.privateSenders.delete(user);
+      this.privateReceivers.remove(privateOpponent, user);
     }
-    return;
   }
-  attemptJoin(user, opponent) {
-    if(this.gameIndex(user) === -1) return false;
-    if(this.gameIndex(opponent) === -1) return false;
-    for(let i = 0; i < this.privateChallenges.length; i++) {
-      let c = this.privateChallenge[i];
-      if(c[0] === opponent && c[1] === user) {
-        this.privateChallenge.splice(i, 0);
-        this.games.push([user, opponent, new ServerGame()]);
-        return true;
-      }
-    }
-    let index = this.openChallenges.indexOf(opponent);
-    if(index !== -1) {
-      this.openChallenges.splice(i, 0);
-      this.games.push([user, opponent, new ServerGame()]);
+  attemptJoin(user, sender) {
+    if(this.privateSenders.get(sender) === user
+      || this.openChallenges.indexOf(sender) !== -1) {
+      this.cancelChallenge(user);
+      this.cancelChallenge(sender);
+      let gamedata = new ServerGame();
+      this.games.set(user, [sender, new ServerGame()]);
+      this.games.set(sender, [user, new ServerGame()]);
       return true;
     }
     return false;
@@ -60,7 +93,7 @@ class LobbyData {
     return this.games[i][2].boardState();
   }
   getOpponent(user) {
-
+    
   }
   getChallenges(user) {
 

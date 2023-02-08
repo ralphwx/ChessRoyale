@@ -20,7 +20,7 @@ if len(sys.argv) < 3: outdir = ""
 else: 
     outdir = sys.argv[2]
     if outdir[-1] != "/": outdir += "/"
-
+os.system("rm main/" + outdir + "*.map")
 os.system("cp src/" + jsfile + " src/index.js")
 os.system("npm run build")
 

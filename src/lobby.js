@@ -11,7 +11,9 @@ const RowType = {
   INCOMING_PRIVATE: 2,
   INCOMING_PUBLIC: 3,
   NO_CHALLENGES: 4,
+  LOADING: 5,
 }
+
 class LobbyRow extends React.Component {
   constructor(props) {
     super(props);
@@ -23,6 +25,20 @@ class LobbyRow extends React.Component {
       opponent: props.opponent,
       onClick: props.onClick,
     }
+  }
+  hash() {
+    if(this.state.type === RowType.NO_CHALLENGES) return 0;
+    if(this.state.type === RowType.LOADING) return 1;
+    let str = this.state.challenger + "#" + this.state.challengerElo + "#" + 
+      this.state.type + "#";
+    if(this.state.opponent) str += this.state.opponent;
+    let output = 0;
+    for(let i = 0; i < str.length; i++) {
+      output *= 31;
+      output += str.charCodeAt(i);
+    }
+    console.log("computed hash: " + output);
+    return output;
   }
   onMouseEnter() {
     this.setState({highlight:true});
@@ -63,38 +79,35 @@ class LobbyRow extends React.Component {
   }
   render() {
     if(this.state.type === RowType.NO_CHALLENGES) {
-      return <div style={{
-        fontSize: "20px",
-        height: "20px",
-        padding: "5px",
+      return <div className={"roomli"} style={{
         border: "2px solid lightgray",
-        float: "center",
-        marginLeft: "auto",
-        marginRight: "auto",
       }}>
         <div className="floater">{"<No open challenges>"}</div>
       </div>
     }
+    if(this.state.type === RowType.LOADING) {
+      return <div className="floater" style={{
+        margin: "5px"
+      }}>
+        {"Loading ..."}
+      </div>;
+    }
     let color = this.getColor();
     let description = this.getDescription();
     let floaterContent = this.getFloaterContent();
-    return <div 
+    return <div className="roomli" 
       style={{
-        fontSize: "20px",
-        height: "20px",
-        padding: "5px",
         border: "2px solid " + color,
-        position: "relative",
       }}
       onMouseEnter={() => {this.onMouseEnter()}}
       onMouseLeave={() => {this.onMouseExit()}}
       onClick={() => {this.state.onClick()}}
     >
       <div className="descriptor">
-        <div style={{float: "left"}}>
+        <div style={{float: "left", margin: "2px"}}>
           {this.state.challenger} ({this.state.challengerElo})
         </div>
-        <div style={{float: "right"}}>
+        <div style={{float: "right", margin: "2px"}}>
           {description}
         </div>
       </div>
@@ -104,6 +117,7 @@ class LobbyRow extends React.Component {
       }}></div>
       <div className="floater" style={{
         opacity: this.state.highlight ? 0.8 : 0,
+        margin: "2px",
       }}>
         {floaterContent}
       </div>
@@ -142,7 +156,7 @@ class LobbyView extends React.Component {
 
   renderLobby(data) {
     if(data === null) {
-      return <div>{"Loading..."}</div>
+      return "Loading...";
     }
     if(data.length === 0) {
       return <LobbyRow type={RowType.NO_CHALLENGES} />
@@ -188,7 +202,10 @@ class LobbyView extends React.Component {
   }
 
   render() {
+    let data = this.state.lobbyData;
+    console.log(data);
     let lobby = this.renderLobby(this.state.lobbyData);
+    console.log(lobby);
     return <div>
       <HeaderRow />
       <div className="main_display">{lobby}</div>

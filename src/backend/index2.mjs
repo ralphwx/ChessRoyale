@@ -76,6 +76,11 @@ authserver.addEventHandler("lobby", (user, args, ack) => {
       receiver: "",
     }
   ]
+  if(Math.random() < 0.5) {
+    let temp = data[2];
+    data[2] = data[1];
+    data[1] = temp;
+  }
   ack(data);
 });
 

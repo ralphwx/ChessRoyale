@@ -3,4 +3,7 @@ build:
 	python3 build.py game.js game
 	python3 build.py login.js login
 
-.PHONY: build
+lobby:
+	python3 build.py lobby.js
+
+.PHONY: build lobby

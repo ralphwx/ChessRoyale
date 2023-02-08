@@ -5,16 +5,33 @@
   margin-left: auto;
   margin-right: auto;
   border: 3px solid gray;
-  padding: 10px;
   overflow: auto;
 }
 
 .roomli {
-  width: 90%;
-  height: auto;
+  height: 30px;
   font-size: 20px;
-  border: 2px solid lightgray;
-  padding: 5px;
+  margin: 5px;
+  position: relative;
+}
+
+.floater {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  justify-content: center;
+  display: flex;
+}
+
+.descriptor {
+  z-index:9;
+  height: 100%;
+  width:100%;
+  position: absolute;
+  top:0;
+  left: 0;
 }
 
 .button_row {
@@ -108,22 +125,3 @@ input {
   margin-right:auto;
 }
 
-.floater {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  justify-content: center;
-  display: flex;
-  margin-top: 2px;
-}
-
-.descriptor {
-  z-index:9;
-  width:100%;
-  height:100%;
-  position: absolute;
-  top:0;
-  left: 0;
-}

@@ -23,20 +23,38 @@ class Game extends React.Component {
 }
 function App() {
   return <div>
-    <div id="chessboard" style={{
-      width: 400,
-      height: 400,
-      marginLeft: "auto",
-      marginRight: "auto",
+    <div style={{
+      height: "",
       backgroundColor: "orange",
+      display: "flex",
+      marginTop: "auto",
+      marginBottom: "auto",
     }}>
+      <div style={{
+        width: "200px",
+        height: "400px",
+        marginLeft: "auto",
+        border: "2px solid green",
+        opacity: 0.5,
+      }}></div>
+      <div style={{
+        width: "400px",
+        height: "400px",
+        border: "2px solid red",
+        backgroundColor: "red",
+        opacity: 0.5,
+      }}>
+      </div>
+      <div style={{
+        width: "200px",
+        height: "400px",
+        marginRight: "auto",
+        border: "2px solid green",
+        backgroundColor: "green",
+        opacity: 0.5,
+      }}>
+      </div>
     </div>
-    <div id="metabox" style={{
-      width: 200,
-      height: 200,
-      marginLeft: 0,
-      backgroundColor: "red",
-    }}></div>
   </div>
 }
 

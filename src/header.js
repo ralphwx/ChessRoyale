@@ -12,7 +12,7 @@ class HeaderRow extends React.Component {
     let username = JSON.parse(localStorage.getItem("username"));
     let userbox = <div></div>;
     if(username !== null) {
-      userbox = <div style={{fontSize:"30px"}}>
+      userbox = <div>
         Logged in as {username}
         <br/>
         <button id="logout" onClick={() => this.logout()}>Log out</button>

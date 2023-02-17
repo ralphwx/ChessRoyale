@@ -182,7 +182,7 @@ class LobbyView extends React.Component {
       let type = this.getType(challenge)
       let onClick = this.computeOnClick(challenge, type);
       output.push(<LobbyRow
-        key={challenge.sender}
+        key={challenge.sender + type}
         challenger={challenge.sender}
         challengerElo={challenge.senderElo}
         type={type}

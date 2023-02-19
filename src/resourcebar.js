@@ -12,7 +12,7 @@ export function ResourceBar(props) {
   for(let i = 0; i < 10; i++) {
     squares.push(<ResourceSquare amount={props.amount - i}/>);
   }
-  return <div>{squares}</div>;
+  return <div className="resourcebar">{squares}</div>;
 }
 
 /**

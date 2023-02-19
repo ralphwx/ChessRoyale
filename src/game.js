@@ -22,19 +22,20 @@ class Game extends React.Component {
   }
 }
 function App() {
-  return <div>
+  return <div style={{
+    display: "flex",
+    marginLeft: "auto",
+    marginRight: "auto",
+  }}>
     <div id="chessboard" style={{
       width: 400,
       height: 400,
-      marginLeft: "auto",
-      marginRight: "auto",
       backgroundColor: "orange",
     }}>
     </div>
     <div id="metabox" style={{
       width: 200,
       height: 200,
-      marginLeft: 0,
       backgroundColor: "red",
     }}></div>
   </div>

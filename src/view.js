@@ -79,9 +79,13 @@ export function BoardView(props) {
             props.onClick(i, j);
           }}
           opacity={computeOpacity(i, j)}
+          key={i + "_" + j}
         />);
       }
-      squares.push(<div className="gridrow">{row}</div>);
+      squares.push(<div className="gridrow" style={{
+        width: "100%",
+        height: "12.5%",
+      }}>{row}</div>);
     }
   } else if(props.color === Color.BLACK) {
     for(let i = 0; i < 8; i++) {
@@ -99,10 +103,13 @@ export function BoardView(props) {
           opacity={computeOpacity(i, j)}
         />);
       }
-      squares.push(<div className="gridrow">{row}</div>);
+      squares.push(<div className="gridrow" style={{
+        width: "100%",
+        height: "12.5%",
+      }}>{row}</div>);
     }
   }
-  return (<div>{squares}</div>);
+  return (<div className="chessboard">{squares}</div>);
 }
 
 /**
@@ -126,11 +133,11 @@ function Square(props) {
     default: throw "Incomplete case match" + props.type;
   }
   return (
-    <button className={"square"} onClick={props.onClick} style={{
+    <div className={"square"} onClick={props.onClick} style={{
       backgroundColor: color,
       opacity: props.opacity,
     }}>
       {props.id}
-    </button>
+    </div>
   );
 }

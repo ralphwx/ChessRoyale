@@ -6,13 +6,13 @@
   min-height:60px;
   background-color: #cab2d6;
   position: relative;
-  margin-bottom: 4.7vh;
+  margin-bottom: 5vh;
 }
 
 #logo {
   float:right;
   margin-left:auto;
-  margin-right:20px;
+  margin-right:1vw;
   width:10vh;
   height:10vh;
   min-width: 60px;
@@ -52,7 +52,7 @@
 /* style for lobby.js */
 .main_display {
   width: 50%;
-  height: 300px;
+  height: 50vh;
   max-width: 750px;
   margin-left: auto;
   margin-right: auto;
@@ -62,7 +62,7 @@
 
 .roomli {
   height: 30px;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   margin: 5px;
   position: relative;
 }
@@ -99,6 +99,7 @@
   content: "";
   display: table;
 }
+
 .ctrl {
   width: 31%; 
   height: 100%;
@@ -107,47 +108,97 @@
   font-size: 1rem;
   margin: 5px;
 }
+
 /* style for game.js */
 .gridrow:after {
-  clear: both;
   content: "";
   display: table;
 }
 
 .square {
-  width: 50px;
-  height: 50px;
+  width: 12.5%;
+  min-height: 100%;
   float: left;
 }
 
+.chessboard {
+  width: 64vh;
+  height: 64vh;
+}
+
+.chesspiece {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  margin-left: 3px;
+  margin-right: 3px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+.metabox {
+  width: 32vh;
+  height: 100%;
+  background-color: red;
+}
+
+.gamecontainer {
+  width: 96vh;
+  height: 70.6vh;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.resourcebar {
+  width: 64vh;
+  height: 6.4vh;
+  display: flex;
+  background-color: rgba(0, 0, 255, 0.2);
+}
+
 .resource {
-  width: 36px;
-  height: 36px;
+  width: calc(10% - 4px);
+  height: calc(100% - 4px);
   float: left;
   border-style: solid;
   border-width: 2px;
   border-color: #000000;
 }
 
-.chesspiece {
-  width: 37px;
-  height: 37px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: auto;
-  margin-bottom: auto;
+.info {
+  width: 90%;
+  height: 2rem;
+  margin: 5%;
+  background-color: green;
 }
 
-.ctrl_column {
-  width: 150px;
-  padding-top: 280px;
-  margin-left: 10px;
+.ready {
+  width: 90%;
+  height: 4rem;
+  margin: 5%;
+  background-color: blue;
+}
+
+.opponent {
+  float: top;
+}
+
+.console {
+  width: 90%;
+  height: calc(59.4vh - 16rem);
+  background-color: lightgray;
+  margin: 5%;
+}
+
+.user {
+  margin-bottom: 0;
 }
 
 .gamectrl {
-  width: 150px;
-  height: 50px;
-  margin-top: 30px;
+  width: 90%;
+  margin: 5%;
+  height: 4rem;
+  background-color: darkgray;
 }
 
 /* style for login */

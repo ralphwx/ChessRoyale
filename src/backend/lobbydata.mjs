@@ -1,10 +1,16 @@
 
-import {UserManager} from "./users.mjs";
 import {ServerGame} from "./servergame.mjs";
 import {SocketManager} from "./socketmanager.mjs";
 
-let users = new UserManager("./users/");
 class LobbyData {
+  //impl note
+  //  openChallenges is a list of users who submitted an open challenge
+  //  privateSenders is a map of users who submitted private challenges to
+  //    the users they challenged
+  //  privateReceivers is a map of users to a list of users that sent them
+  //    private challenges
+  //  games is a map from users to a list [opp, game] where [opp] is the
+  //  opponent and [game] is a servergame object
   constructor() {
     this.openChallenges = [];
     this.privateSenders = new Map();
@@ -17,7 +23,6 @@ class LobbyData {
     if(this.openChallenges.indexOf(user) !== -1) {
       output.push({
         sender: user,
-        senderElo: users.getElo(user),
         receiver: "",
       });
     }
@@ -25,18 +30,14 @@ class LobbyData {
     if(privateOpponent !== undefined) {
       output.push({
         sender: user,
-        senderElo: users.getElo(user),
         receiver: privateOpponent,
-        receiverElo: users.getElo(privateOpponent),
       });
     }
     //next check for private challenges going to the user
     for(let sender of this.privateReceivers.get(user)) {
       output.push({
         sender: sender,
-        senderElo: users.getElo(sender),
         receiver: user,
-        receiverElo: users.getElo(user),
       });
     }
     //next add all public challenges
@@ -44,7 +45,6 @@ class LobbyData {
       if(sender !== user) {
         output.push({
           sender: sender,
-          senderElo: users.getElo(sender),
           receiver: "",
         });
       }
@@ -81,28 +81,18 @@ class LobbyData {
       this.cancelChallenge(user);
       this.cancelChallenge(sender);
       let gamedata = new ServerGame();
-      this.games.set(user, [sender, new ServerGame()]);
-      this.games.set(sender, [user, new ServerGame()]);
+      this.games.set(user, [sender, new ServerGame(sender, user)]);
+      this.games.set(sender, [user, new ServerGame(sender, user)]);
       return true;
     }
     return false;
   }
-  getBoard(user) {
-    let i = this.gameIndex();
-    if(i === -1) throw "User is not in a game";
-    return this.games[i][2].boardState();
-  }
-  getOpponent(user) {
-    
-  }
-  getChallenges(user) {
-
-  }
-  declareReady(user) {
-
-  }
-  attemptMove(user) {
-
+  //Returns the ServerGame object representing the current state of the game
+  // [user] is taking part in, or undefined if the user is not in a game.
+  getGame(user) {
+    let output = this.games.get(user);
+    if(output) return output[1];
+    return undefined;
   }
 }
 

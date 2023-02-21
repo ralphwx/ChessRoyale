@@ -6,4 +6,6 @@ build:
 lobby:
 	python3 build.py lobby.js
 
+game:
+	python3 build.py game.js game
 .PHONY: build lobby

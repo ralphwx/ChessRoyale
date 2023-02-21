@@ -70,6 +70,12 @@ authserver.addEventHandler("join", (user, args) => {
 //  }
 authserver.addEventHandler("lobby", (user, args, ack) => {
   let data = lobbydata.getLobbyData(user);
+  data = data.map(x => {
+    let senderElo = users.getElo(x.sender);
+    let receiverElo = undefined;
+    if(x.receiver.length > 0) receiverElo = users.getElo(x.receiver);
+    return Object.assign({senderElo: senderElo, receiverElo: receiverElo}, x);
+  });
   ack(data);
 });
 
@@ -80,8 +86,26 @@ authserver.addEventHandler("move", (user, args, ack) => {
 authserver.addEventHandler("ready", (user, args, ack) => {
   //TODO
 });
-authserver.addEventHandler("gamedata", (user, args, ack) => {
+authserver.addEventHandler("draw", (user, args, ack) => {
   //TODO
+});
+authserver.addEventHandler("resign", (user, args, ack) => {
+  //TODO
+});
+authserver.addEventHandler("abort", (user, args, ack) => {
+  //TODO
+});
+//returns a metadata object describing the game the current user is in
+//requires the user to be in a game.
+authserver.addEventHandler("gamedata", (user, args, ack) => {
+  let game = lobbydata.getGame(user);
+  if(game === undefined) return;
+  let data = game.metaData();
+  data.whiteElo = users.getElo(data.white);
+  data.blackElo = users.getElo(data.black);
+  data.whiteOnline = authserver.isOnline(data.white);
+  data.blackOnline = authserver.isOnline(data.black);
+  ack(data);
 });
 
 server.listen(8080, () => {

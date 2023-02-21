@@ -138,7 +138,7 @@
 .metabox {
   width: 32vh;
   height: 100%;
-  background-color: red;
+  background-color: #386cb0
 }
 
 .gamecontainer {
@@ -169,18 +169,25 @@
   width: 90%;
   height: 2rem;
   margin: 5%;
-  background-color: green;
+  padding: 2%;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.online {
+  background-color: #ccebc5;
+}
+
+.offline {
+  background-color: #fbb4ae;
 }
 
 .ready {
   width: 90%;
   height: 4rem;
-  margin: 5%;
-  background-color: blue;
-}
-
-.opponent {
-  float: top;
+  margin-left: 5%;
+  margin-right: 5%;
+  font-size: 1.5rem;
 }
 
 .console {
@@ -188,10 +195,6 @@
   height: calc(59.4vh - 16rem);
   background-color: lightgray;
   margin: 5%;
-}
-
-.user {
-  margin-bottom: 0;
 }
 
 .gamectrl {

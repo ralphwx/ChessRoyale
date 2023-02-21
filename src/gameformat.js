@@ -1,62 +1,43 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import {connect} from "./authclient.mjs";
-import {URL} from "./enums.mjs";
-
+import {URL, Color} from "./enums.mjs";
+import {BoardView} from "./view.js";
+import {ChessBoard} from "./chess.mjs";
+import "./index.css";
+import {ResourceBar} from "./resourcebar.js";
+import {HeaderRow} from "./header.js";
 class Game extends React.Component {
   constructor(props) {
     super(props);
-//    if(localStorage.getItem("username") === null) {
-//      window.location.replace(URL + "/login");
-//    }
-//    connect(URL,
-//      JSON.parse(localStorage.getItem("username")),
-//      JSON.parse(localStorage.getItem("password")),
-//      false, (socket) => {
-//        this.socket = socket;
-//      },
-//      () => {
-//        window.location.replace(URL + "/login");
-//      }
-//    );
   }
-}
-function App() {
-  return <div>
-    <div style={{
-      height: "",
-      backgroundColor: "orange",
-      display: "flex",
-      marginTop: "auto",
-      marginBottom: "auto",
-    }}>
-      <div style={{
-        width: "200px",
-        height: "400px",
-        marginLeft: "auto",
-        border: "2px solid green",
-        opacity: 0.5,
-      }}></div>
-      <div style={{
-        width: "400px",
-        height: "400px",
-        border: "2px solid red",
-        backgroundColor: "red",
-        opacity: 0.5,
-      }}>
-      </div>
-      <div style={{
-        width: "200px",
-        height: "400px",
-        marginRight: "auto",
-        border: "2px solid green",
-        backgroundColor: "green",
-        opacity: 0.5,
-      }}>
+  render() {
+    return <div>
+      <HeaderRow />
+      <div className="gamecontainer">
+        <div>
+          <BoardView
+            board={ChessBoard.startingPosition()}
+            selectRow={-1}
+            selectCol={-1}
+            onClick={() => {}}
+            color={Color.WHITE}
+            delay={[]}
+          />
+          <ResourceBar amount={3.14} />
+        </div>
+        <div className="metabox">
+          <div className="info"></div>
+          <div className="ready"></div>
+          <div className="console"></div>
+          <div className="ready"></div>
+          <div className="info"></div>
+          <div className="gamectrl"></div>
+        </div>
       </div>
     </div>
-  </div>
+  }
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(<Game />);

@@ -2,13 +2,27 @@
 import {ChessBoard} from "../chess.mjs";
 import {Piece, Color, colorOf, MoveType} from "../enums.mjs";
 
+//ServerGame keeps track of the data relevant to a single game
+//it tracks the username of the person playing white and black, tracks
+//who's ready, and tracks whether the game is over.
 class ServerGame {
-  constructor() {
+  constructor(whiteUser, blackUser) {
     //ServerGame tracks the board state, everyone who needs board updates,
     //who's ready
     this.board = ChessBoard.startingPosition();
+    this.white = whiteUser;
+    this.black = blackUser;
     this.wready = false;
     this.bready = false;
+  }
+
+  metaData() {
+    return {
+      white: this.white,
+      black: this.black,
+      wready: this.wready,
+      bready: this.bready,
+    }
   }
 
   boardState() {

@@ -14,6 +14,11 @@ class ServerGame {
     this.black = blackUser;
     this.wready = false;
     this.bready = false;
+    this.gamestate = {
+      ongoing: true,
+      cause: undefined,
+      winner: undefined,
+    }
   }
 
   metaData() {
@@ -22,6 +27,7 @@ class ServerGame {
       black: this.black,
       wready: this.wready,
       bready: this.bready,
+      ongoing: this.gameState().ongoing,
     }
   }
 
@@ -40,7 +46,7 @@ class ServerGame {
   }
 
   move(iRow, iCol, fRow, fCol, color) {
-    if(this.gameOver().gameOver) return false;
+    if(!this.gameState().ongoing) return false;
     if(!this.bothReady()) return false;
     if(this.board.moveType(iRow, iCol, fRow, fCol) !== MoveType.INVALID
       && colorOf(this.board.pieceAt(iRow, iCol)) === color) {
@@ -50,7 +56,8 @@ class ServerGame {
     return false;
   }
 
-  gameOver() {
+  gameState() {
+    if(!this.gamestate.ongoing) return this.gamestate;
     let wking = false;
     let bking = false;
     for(let i = 0; i < 8; i++) {
@@ -59,10 +66,37 @@ class ServerGame {
         if(this.board.pieceAt(i, j) === Piece.B_KING) bking = true;
       }
     }
-    return {
-      gameOver: !wking || !bking,
-      winner: wking
+    if(!wking) {
+      this.gamestate = {
+        ongoing: false,
+        cause: "king capture",
+        winner: Color.BLACK,
+      }
+    } else if(!bking) {
+      this.gamestate = {
+        ongoing: false,
+        cause: "king capture",
+        winner: Color.WHITE,
+      }
     }
+    return this.gamestate;
+  }
+
+  resign(user) {
+    if(!this.gamestate.ongoing) return;
+    if(this.white === user) {
+      this.gamestate = {
+        ongoing: false,
+        cause: "resignation",
+        winner: Color.BLACK,
+      }
+    } else if(this.black === user) {
+      this.gamestate = {
+        ongoing: false,
+        cause: "resignation",
+        winner: Color.WHITE,
+      }
+    } else throw "Who's " + user + "??";
   }
 }
 

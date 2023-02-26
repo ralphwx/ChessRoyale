@@ -7,6 +7,9 @@ import {ChessBoard} from "./chess.mjs";
 import "./index.css";
 import {ResourceBar} from "./resourcebar.js";
 import {HeaderRow} from "./header.js";
+import {HoverButton} from "./hoverbutton.js";
+import flag from "./img/flag.png";
+import exit from "./img/exit.png";
 
 class Game extends React.Component {
   constructor(props) {
@@ -15,8 +18,18 @@ class Game extends React.Component {
     let psw = JSON.parse(localStorage.getItem("password"));
     connect(URL, user, psw, false, (socket) => {
       this.socket = socket;
+      this.socket.addEventHandler("gameover", (user, args) => {
+        if(args.ongoing) throw "nanitf";
+        let msg;
+        if(args.winner === Color.WHITE) msg = "White wins by " + args.cause;
+        else if(args.winner === Color.BLACK) msg = "Black wins by " + args.cause
+        else throw "Incomplete case match";
+        alert(msg);
+      });
       this.metaUpdater = setInterval(() => {
         this.socket.notify("gamedata", {}, (data) => {
+          console.log("received metadata");
+          console.log("ongoing: " + data.ongoing);
           if(data.white === user) {
             let stateUpdate = {
               color: Color.WHITE,
@@ -24,6 +37,7 @@ class Game extends React.Component {
               opponent: data.black,
               opponentOnline: data.blackOnline,
               opponentElo: data.blackElo,
+              ongoing: data.ongoing,
             }
             this.setState(stateUpdate);
             return;
@@ -35,6 +49,7 @@ class Game extends React.Component {
             opponent: data.white,
             opponentOnline: data.whiteOnline,
             opponentElo: data.whiteElo,
+            ongoing: data.ongoing,
           }
           this.setState(stateUpdate);
         });
@@ -54,8 +69,14 @@ class Game extends React.Component {
       opponentElo: "???",
       opponentOnline: false,
       opponentReady: false,
-      readyhover: false,
+      ongoing: true,
     }
+  }
+  offerDraw() {
+    console.log("draw offer");
+  }
+  resign() {
+    this.socket.notify("resign", {}, () => {});
   }
   render() {
     let oppready;
@@ -69,21 +90,37 @@ class Game extends React.Component {
     let userready;
     if(this.state.userReady) {
       userready = <button className="ready online">{"Ready!"}</button>
-    } else if(this.state.readyhover) {
-      userready = <button className="ready online"
-        onMouseLeave={() => {this.setState({readyhover: false})}}>
-        {"Declare ready?"}
-      </button>
     } else {
-      userready = 
-        <button className="ready offline"
-          onClick={() => {this.declareReady()}}
-          onMouseEnter={() => {this.setState({readyhover: true})}}>
-          {"I'm preparing..."}
-        </button>
+      userready = <HoverButton
+        innerHTML={"I'm preparing..."}
+        innerHTMLHover={"Declare ready?"}
+        className={"ready offline"}
+        classNameHover={"ready online"}
+        onClick={() => {console.log("declare ready");}}
+      />
     }
     let userinfo = this.state.userOnline ? "info online" : "info offline";
     let oppoinfo = this.state.opponentOnline ? "info online" : "info offline";
+    console.log(this.state.ongoing);
+    let resign = <HoverButton
+      key="exit"
+      innerHTML={<img className="chesspiece" src={exit} alt="leave"/>}
+      innerHTMLHover={<img className="chesspiece" src={exit} alt="leave"/>}
+      className={"resign"}
+      classNameHover={"resign resignhover"}
+      onClick={() => {window.location.replace(URL)}}
+    />
+    if(this.state.ongoing) {
+      console.log("button replace!");
+      resign = <HoverButton
+        key="resign"
+        innerHTML={<img className="chesspiece" src={flag} alt="resign"/>}
+        innerHTMLHover={<img className="chesspiece" src={flag} alt="leave"/>}
+        className={"resign"}
+        classNameHover={"resign resignhover"}
+        onClick={() => {this.resign()}}
+      />
+    }
     return <div>
       <HeaderRow />
       <div className="gamecontainer">
@@ -93,7 +130,7 @@ class Game extends React.Component {
             selectRow={-1}
             selectCol={-1}
             onClick={() => {}}
-            color={Color.WHITE}
+            color={this.state.color}
             delay={[]}
           />
           <ResourceBar amount={3.14} />
@@ -108,7 +145,16 @@ class Game extends React.Component {
           <div className={userinfo}>
             {this.state.user} ({this.state.userElo})
           </div>
-          <div className="gamectrl"></div>
+          <div className="gamectrl">
+            <HoverButton
+              innerHTML={"1/2"}
+              innerHTMLHover={"1/2"}
+              className={"draw"}
+              classNameHover={"draw drawhover"}
+              onClick={() => {this.offerDraw()}}
+            />
+            {resign}
+          </div>
         </div>
       </div>
     </div>

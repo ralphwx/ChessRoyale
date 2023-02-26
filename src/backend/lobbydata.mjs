@@ -80,9 +80,9 @@ class LobbyData {
       || this.openChallenges.indexOf(sender) !== -1) {
       this.cancelChallenge(user);
       this.cancelChallenge(sender);
-      let gamedata = new ServerGame();
-      this.games.set(user, [sender, new ServerGame(sender, user)]);
-      this.games.set(sender, [user, new ServerGame(sender, user)]);
+      let gamedata = new ServerGame(sender, user);
+      this.games.set(user, [sender, gamedata]);
+      this.games.set(sender, [user, gamedata]);
       return true;
     }
     return false;

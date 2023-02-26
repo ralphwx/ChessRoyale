@@ -22,6 +22,7 @@ import {AuthServer} from "./authserver.mjs";
 const authserver = new AuthServer(server, "./users/");
 import {LobbyData} from "./lobbydata.mjs";
 import {UserManager} from "./users.mjs";
+import {Color} from "../enums.mjs";
 
 let lobbydata = new LobbyData();
 
@@ -90,7 +91,21 @@ authserver.addEventHandler("draw", (user, args, ack) => {
   //TODO
 });
 authserver.addEventHandler("resign", (user, args, ack) => {
-  //TODO
+  //update the game state to 'user' resigned
+  //notify both players
+  let game = lobbydata.getGame(user);
+  if(game === undefined || !game.gameState().ongoing) return;
+  game.resign(user)
+  let meta = game.metaData();
+  authserver.notify(meta.white, "gameover", game.gameState());
+  authserver.notify(meta.black, "gameover", game.gameState());
+  if(game.metaData().winner === Color.WHITE) {
+    users.setElo(meta.white, users.getElo(meta.white) + 8);
+    users.setElo(meta.black, users.getElo(meta.black) - 8)
+  } else {
+    users.setElo(meta.white, users.getElo(meta.white) - 8);
+    users.setElo(meta.black, users.getElo(meta.black) + 8);
+  }
 });
 authserver.addEventHandler("abort", (user, args, ack) => {
   //TODO

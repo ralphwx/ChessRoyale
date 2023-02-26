@@ -201,9 +201,35 @@
   width: 90%;
   margin: 5%;
   height: 4rem;
-  background-color: darkgray;
+  display: flex;
 }
 
+.draw {
+  width: 4rem;
+  height: 4rem;
+  background-color: darkgray;
+  margin-left: 5%;
+  font-size: 2rem;
+}
+
+.resign {
+  width: 4rem;
+  height: 4rem;
+  background-color: darkgray;
+  margin-left: auto;
+  margin-right: 5%;
+  float: right;
+}
+
+.resignhover {
+  background-color: #dd4400;
+  color: #eee;
+}
+
+.drawhover {
+  background-color: #669922;
+  color: #eee;
+}
 /* style for login */
 #loginBox {
   width:300px;

@@ -212,6 +212,11 @@
   font-size: 2rem;
 }
 
+.drawhover {
+  background-color: #669922;
+  color: #eee;
+}
+
 .resign {
   width: 4rem;
   height: 4rem;
@@ -222,14 +227,10 @@
 }
 
 .resignhover {
-  background-color: #dd4400;
+  background-color: #ee5511;
   color: #eee;
 }
 
-.drawhover {
-  background-color: #669922;
-  color: #eee;
-}
 /* style for login */
 #loginBox {
   width:300px;

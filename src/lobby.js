@@ -122,6 +122,14 @@ class LobbyView extends React.Component {
       JSON.parse(localStorage.getItem("password")), 
       false, (socket) => {
         this.socket = socket;
+        this.socket.notify("redirect?", {}, (place) => {
+          if(place === "game") {
+            window.location.replace(URL + "/game");
+            return;
+          }
+          if(place === "lobby") return;
+          throw "Incomplete case match: " + place;
+        });
         this.lobbyUpdater = setInterval(() => {
           this.socket.notify("lobby", null, (data) => {
             this.updateLobby(data);

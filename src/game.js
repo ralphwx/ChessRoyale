@@ -10,6 +10,11 @@ import {HeaderRow} from "./header.js";
 import {HoverButton} from "./hoverbutton.js";
 import flag from "./img/flag.png";
 import exit from "./img/exit.png";
+import abort from "./img/abort.png";
+
+const resource_time = 4000;
+const max_resources = 10;
+const move_delay = 2000;
 
 class Game extends React.Component {
   constructor(props) {
@@ -18,25 +23,40 @@ class Game extends React.Component {
     let psw = JSON.parse(localStorage.getItem("password"));
     connect(URL, user, psw, false, (socket) => {
       this.socket = socket;
+      this.socket.notify("redirect?", {}, (place) => {
+        if(place === "game") return;
+        if(place === "lobby") {
+          window.location.replace(URL);
+          return;
+        }
+        throw "Incomplete case match: " + place;
+      });
+      this.socket.addEventHandler("started", (user, args) => {
+        this.setState({startTime: args.time});
+      });
       this.socket.addEventHandler("gameover", (user, args) => {
         if(args.ongoing) throw "nanitf";
         let msg;
         if(args.winner === Color.WHITE) msg = "White wins by " + args.cause;
         else if(args.winner === Color.BLACK) msg = "Black wins by " + args.cause
+        else if(args.winner === Color.NONE) {
+          if(args.cause === "aborted") msg = "Game aborted";
+          else msg = "Draw agreed";
+        }
         else throw "Incomplete case match";
         alert(msg);
       });
       this.metaUpdater = setInterval(() => {
         this.socket.notify("gamedata", {}, (data) => {
-          console.log("received metadata");
-          console.log("ongoing: " + data.ongoing);
           if(data.white === user) {
             let stateUpdate = {
               color: Color.WHITE,
               userElo: data.whiteElo,
+              userReady: data.wready,
               opponent: data.black,
               opponentOnline: data.blackOnline,
               opponentElo: data.blackElo,
+              opponentReady: data.bready,
               ongoing: data.ongoing,
             }
             this.setState(stateUpdate);
@@ -46,14 +66,24 @@ class Game extends React.Component {
           let stateUpdate = {
             color: Color.BLACK,
             userElo: data.blackElo,
+            userReady: data.bready,
             opponent: data.white,
             opponentOnline: data.whiteOnline,
             opponentElo: data.whiteElo,
+            opponentReady: data.wready,
             ongoing: data.ongoing,
           }
           this.setState(stateUpdate);
         });
       }, 1000);
+      this.resourceUpdater = setInterval(() => {
+        console.log(this.state);
+        if(this.state.ongoing === false) return;
+        let now = Date.now();
+        if(now - this.state.startTime > resource_time * max_resources) {
+          this.setState({startTime: now - resource_time * max_resources});
+        } else this.setState({});
+      }, 100);
     }, () => {
       window.location.replace(URL + "/login");
     });
@@ -72,12 +102,23 @@ class Game extends React.Component {
       ongoing: true,
     }
   }
+
   offerDraw() {
     console.log("draw offer");
   }
+
   resign() {
     this.socket.notify("resign", {}, () => {});
   }
+
+  abort() {
+    this.socket.notify("abort", {}, () => {});
+  }
+
+  declareReady() {
+    this.socket.notify("ready", {}, () => {});
+  }
+
   render() {
     let oppready;
     if(this.state.opponentReady) {
@@ -96,12 +137,11 @@ class Game extends React.Component {
         innerHTMLHover={"Declare ready?"}
         className={"ready offline"}
         classNameHover={"ready online"}
-        onClick={() => {console.log("declare ready");}}
+        onClick={() => {this.declareReady()}}
       />
     }
     let userinfo = this.state.userOnline ? "info online" : "info offline";
     let oppoinfo = this.state.opponentOnline ? "info online" : "info offline";
-    console.log(this.state.ongoing);
     let resign = <HoverButton
       key="exit"
       innerHTML={<img className="chesspiece" src={exit} alt="leave"/>}
@@ -111,16 +151,27 @@ class Game extends React.Component {
       onClick={() => {window.location.replace(URL)}}
     />
     if(this.state.ongoing) {
-      console.log("button replace!");
       resign = <HoverButton
         key="resign"
         innerHTML={<img className="chesspiece" src={flag} alt="resign"/>}
-        innerHTMLHover={<img className="chesspiece" src={flag} alt="leave"/>}
+        innerHTMLHover={<img className="chesspiece" src={flag} alt="resign"/>}
         className={"resign"}
         classNameHover={"resign resignhover"}
         onClick={() => {this.resign()}}
       />
+      if(!this.state.userReady || !this.state.opponentReady) {
+        resign = <HoverButton
+          key="abort"
+          innerHTML={<img className="chesspiece" src={abort} alt="abort"/>}
+          innerHTMLHover={<img className="chesspiece" src={abort} alt="abort"/>}
+          className={"resign"}
+          classNameHover={"resign resignhover"}
+          onClick={() => {this.abort()}}
+        />
+      }
     }
+    let amount = (Date.now() - this.state.startTime) / resource_time;
+    if(!this.state.ongoing) amount = 0;
     return <div>
       <HeaderRow />
       <div className="gamecontainer">
@@ -133,7 +184,7 @@ class Game extends React.Component {
             color={this.state.color}
             delay={[]}
           />
-          <ResourceBar amount={3.14} />
+          <ResourceBar amount={amount} />
         </div>
         <div className="metabox">
           <div className={oppoinfo}>

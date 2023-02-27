@@ -28,6 +28,12 @@ let lobbydata = new LobbyData();
 
 let users = new UserManager("./users");
 
+//checks if redirecting is necessary
+authserver.addEventHandler("redirect?", (user, args, ack) => {
+  if(lobbydata.isInGame(user)) ack("game");
+  else ack("lobby");
+});
+
 //attempts to make an open challenge, does nothing if unsuccessful
 authserver.addEventHandler("open_challenge", (user) => {
   lobbydata.makeOpenChallenge(user);
@@ -88,7 +94,7 @@ function gameOver(user) {
   if(game.gameState().winner === Color.WHITE) {
     users.setElo(meta.white, users.getElo(meta.white) + 8);
     users.setElo(meta.black, users.getElo(meta.black) - 8)
-  } else {
+  } else if(game.gameState().winner === Color.BLACK) {
     users.setElo(meta.white, users.getElo(meta.white) - 8);
     users.setElo(meta.black, users.getElo(meta.black) + 8);
   }
@@ -98,12 +104,24 @@ function gameOver(user) {
 authserver.addEventHandler("move", (user, args, ack) => {
   //TODO
 });
+
 authserver.addEventHandler("ready", (user, args, ack) => {
-  //TODO
+  let game = lobbydata.getGame(user);
+  if(game === undefined || !game.gameState().ongoing) return;
+  if(game.bothReady()) return;
+  game.setReady(user);
+  if(game.bothReady()) {
+    let meta = game.metaData();
+    let now = Date.now();
+    authserver.notify(meta.white, "started", {time: now});
+    authserver.notify(meta.black, "started", {time: now});
+  }
 });
+
 authserver.addEventHandler("draw", (user, args, ack) => {
   //TODO
 });
+
 authserver.addEventHandler("resign", (user, args, ack) => {
   //update the game state to 'user' resigned
   //notify both players
@@ -112,9 +130,14 @@ authserver.addEventHandler("resign", (user, args, ack) => {
   game.resign(user)
   gameOver(user);
 });
+
 authserver.addEventHandler("abort", (user, args, ack) => {
-  //TODO
+  let game = lobbydata.getGame(user);
+  if(game === undefined || !game.gameState().ongoing) return;
+  game.abort();
+  gameOver(user);
 });
+
 //returns a metadata object describing the game the current user is in
 //requires the user to be in a game.
 authserver.addEventHandler("gamedata", (user, args, ack) => {

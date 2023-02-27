@@ -35,10 +35,9 @@ class ServerGame {
     return this.board.toString();
   }
 
-  setReady(color) {
-    if(color === Color.BLACK) this.bready = true;
-    else if(color === Color.WHITE) this.wready = true;
-    else throw "Incomplete case match " + color;
+  setReady(user) {
+    if(this.white === user) this.wready = true;
+    else if(this.black === user) this.bready = true;
   }
 
   bothReady() {
@@ -97,6 +96,14 @@ class ServerGame {
         winner: Color.WHITE,
       }
     } else throw "Who's " + user + "??";
+  }
+
+  abort() {
+    this.gamestate = {
+      ongoing: false,
+      winner: Color.NONE,
+      cause: "aborted",
+    }
   }
 }
 

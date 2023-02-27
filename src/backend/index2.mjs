@@ -80,6 +80,20 @@ authserver.addEventHandler("lobby", (user, args, ack) => {
   ack(data);
 });
 
+function gameOver(user) {
+  let game = lobbydata.getGame(user);
+  let meta = game.metaData();
+  authserver.notify(meta.white, "gameover", game.gameState());
+  authserver.notify(meta.black, "gameover", game.gameState());
+  if(game.gameState().winner === Color.WHITE) {
+    users.setElo(meta.white, users.getElo(meta.white) + 8);
+    users.setElo(meta.black, users.getElo(meta.black) - 8)
+  } else {
+    users.setElo(meta.white, users.getElo(meta.white) - 8);
+    users.setElo(meta.black, users.getElo(meta.black) + 8);
+  }
+}
+
 //game side requests
 authserver.addEventHandler("move", (user, args, ack) => {
   //TODO
@@ -96,16 +110,7 @@ authserver.addEventHandler("resign", (user, args, ack) => {
   let game = lobbydata.getGame(user);
   if(game === undefined || !game.gameState().ongoing) return;
   game.resign(user)
-  let meta = game.metaData();
-  authserver.notify(meta.white, "gameover", game.gameState());
-  authserver.notify(meta.black, "gameover", game.gameState());
-  if(game.metaData().winner === Color.WHITE) {
-    users.setElo(meta.white, users.getElo(meta.white) + 8);
-    users.setElo(meta.black, users.getElo(meta.black) - 8)
-  } else {
-    users.setElo(meta.white, users.getElo(meta.white) - 8);
-    users.setElo(meta.black, users.getElo(meta.black) + 8);
-  }
+  gameOver(user);
 });
 authserver.addEventHandler("abort", (user, args, ack) => {
   //TODO

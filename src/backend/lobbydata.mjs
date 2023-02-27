@@ -10,7 +10,9 @@ class LobbyData {
   //  privateReceivers is a map of users to a list of users that sent them
   //    private challenges
   //  games is a map from users to a list [opp, game] where [opp] is the
-  //  opponent and [game] is a servergame object
+  //  opponent and [game] is a servergame object. Games stores the user's
+  //  most recently played game, and this lobbydata object does not allow users
+  //  to take part in multiple games at once.
   constructor() {
     this.openChallenges = [];
     this.privateSenders = new Map();
@@ -52,13 +54,13 @@ class LobbyData {
     return output;
   }
   makeOpenChallenge(user) {
-    if(this.games.get(user) !== undefined) return;
+    if(this.isInGame(user)) return;
     if(this.openChallenges.indexOf(user) !== -1) return;
     this.cancelChallenge(user);
     this.openChallenges.push(user);
   }
   makePrivateChallenge(user, opponent) {
-    if(this.games.get(user) !== undefined) return;
+    if(this.isInGame(user)) return;
     this.cancelChallenge(user);
     this.privateSenders.set(user, opponent);
     this.privateReceivers.add(opponent, user);
@@ -76,6 +78,7 @@ class LobbyData {
     }
   }
   attemptJoin(user, sender) {
+    if(this.isInGame(user)) return false;
     if(this.privateSenders.get(sender) === user
       || this.openChallenges.indexOf(sender) !== -1) {
       this.cancelChallenge(user);
@@ -91,8 +94,13 @@ class LobbyData {
   // [user] is taking part in, or undefined if the user is not in a game.
   getGame(user) {
     let output = this.games.get(user);
-    if(output) return output[1];
-    return undefined;
+    if(!output) return undefined;
+    return output[1];
+  }
+  //Returns true if the user is currently in an ongoing game
+  isInGame(user) {
+    let data = this.games.get(user);
+    return data && data[1].gameState().ongoing;
   }
 }
 

@@ -28,7 +28,8 @@ let lobbydata = new LobbyData();
 
 let users = new UserManager("./users");
 
-//checks if redirecting is necessary
+//request for checking where the current user is. Returns "game" if the user
+// is currently in a game, returns "lobby" otherwise
 authserver.addEventHandler("redirect?", (user, args, ack) => {
   if(lobbydata.isInGame(user)) ack("game");
   else ack("lobby");
@@ -86,6 +87,8 @@ authserver.addEventHandler("lobby", (user, args, ack) => {
   ack(data);
 });
 
+//function to be called when a game ends, where [user] is one of the
+//participants of the game
 function gameOver(user) {
   let game = lobbydata.getGame(user);
   let meta = game.metaData();
@@ -105,6 +108,8 @@ authserver.addEventHandler("move", (user, args, ack) => {
   //TODO
 });
 
+//request to be made when the user declares ready. Does nothing if the user is
+// not in a game. Does nothing if the user is already ready.
 authserver.addEventHandler("ready", (user, args, ack) => {
   let game = lobbydata.getGame(user);
   if(game === undefined || !game.gameState().ongoing) return;
@@ -118,10 +123,16 @@ authserver.addEventHandler("ready", (user, args, ack) => {
   }
 });
 
-authserver.addEventHandler("draw", (user, args, ack) => {
-  //TODO
+//if a user offers a draw. If the user already offered a draw, then this does
+//nothing. If the user is not in a game, this does nothing.
+authserver.addEventHandler("draw", (user) => {
+  let game = lobbydata.getGame(user);
+  if(game === undefined || !game.gameState().ongoing) return;
+  game.drawOffer(user);
+  if(!game.gameState().ongoing) gameOver(user);
 });
 
+//request for if a player resigns.
 authserver.addEventHandler("resign", (user, args, ack) => {
   //update the game state to 'user' resigned
   //notify both players
@@ -131,9 +142,13 @@ authserver.addEventHandler("resign", (user, args, ack) => {
   gameOver(user);
 });
 
+//request for if a player aborts. If both players are already playing, then
+//this does nothing. If the user is not in a game, then this does nothing.
 authserver.addEventHandler("abort", (user, args, ack) => {
   let game = lobbydata.getGame(user);
   if(game === undefined || !game.gameState().ongoing) return;
+  let meta = game.metaData();
+  if(meta.wready && meta.bready) return;
   game.abort();
   gameOver(user);
 });

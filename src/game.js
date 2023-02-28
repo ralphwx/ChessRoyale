@@ -45,9 +45,11 @@ class Game extends React.Component {
         }
         else throw "Incomplete case match";
         alert(msg);
+        this.state.console.push(msg);
+        this.setState({});
       });
-      this.metaUpdater = setInterval(() => {
-        this.socket.notify("gamedata", {}, (data) => {
+      function metaUpdate(caller) {
+        caller.socket.notify("gamedata", {}, (data) => {
           if(data.white === user) {
             let stateUpdate = {
               color: Color.WHITE,
@@ -59,7 +61,17 @@ class Game extends React.Component {
               opponentReady: data.bready,
               ongoing: data.ongoing,
             }
-            this.setState(stateUpdate);
+            if(!caller.state.drawOffered) {
+              if(data.wdraw && !data.bdraw) {
+                caller.state.console.push("Draw offer sent");
+                stateUpdate.drawOffered = true;
+              }
+              if(data.bdraw && !data.wdraw) {
+                caller.state.console.push("Opponent offers a draw");
+                stateUpdate.drawOffered = true;
+              }
+            }
+            caller.setState(stateUpdate);
             return;
           }
           if(data.black !== user) throw "Nanitf";
@@ -73,11 +85,22 @@ class Game extends React.Component {
             opponentReady: data.wready,
             ongoing: data.ongoing,
           }
-          this.setState(stateUpdate);
+          if(!caller.state.drawOffered) {
+            if(data.wdraw && !data.bdraw) {
+              caller.state.console.push("Opponent offers a draw");
+              stateUpdate.drawOffered = true;
+            }
+            if(data.bdraw && !data.wdraw) {
+              caller.state.console.push("Draw offer sent");
+              stateUpdate.drawOffered = true;
+            }
+          }
+          caller.setState(stateUpdate);
         });
-      }, 1000);
+      }
+      metaUpdate(this);
+      this.metaUpdater = setInterval(metaUpdate, 1000, this);
       this.resourceUpdater = setInterval(() => {
-        console.log(this.state);
         if(this.state.ongoing === false) return;
         let now = Date.now();
         if(now - this.state.startTime > resource_time * max_resources) {
@@ -100,11 +123,12 @@ class Game extends React.Component {
       opponentOnline: false,
       opponentReady: false,
       ongoing: true,
+      console: ["Good luck have fun!", "Click 'I'm preparing' down below to declare yourself ready; game starts when both players are ready."],
     }
   }
 
   offerDraw() {
-    console.log("draw offer");
+    this.socket.notify("draw", {}, () => {});
   }
 
   resign() {
@@ -171,6 +195,8 @@ class Game extends React.Component {
       }
     }
     let amount = (Date.now() - this.state.startTime) / resource_time;
+    let console_text = []
+    for(let t of this.state.console) console_text.push(<div>{t}<br/></div>);
     if(!this.state.ongoing) amount = 0;
     return <div>
       <HeaderRow />
@@ -191,7 +217,9 @@ class Game extends React.Component {
             {this.state.opponent} ({this.state.opponentElo})
           </div>
           {oppready}
-          <div className="console"></div>
+          <div className="console">
+            <div style={{margin: "5px"}}>{console_text}</div>
+          </div>
           {userready}
           <div className={userinfo}>
             {this.state.user} ({this.state.userElo})

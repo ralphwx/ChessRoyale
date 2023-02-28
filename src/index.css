@@ -195,6 +195,11 @@
   height: calc(59.4vh - 16rem);
   background-color: lightgray;
   margin: 5%;
+  font-size: 1.5rem;
+  font-style: italic;
+  text-align: center;
+  color: #555;
+  overflow: auto;
 }
 
 .gamectrl {

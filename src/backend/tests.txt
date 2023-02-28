@@ -1,0 +1,1 @@
+1. If a user joins a game, the game ends, then the user joins another game from a different window without closing the current one

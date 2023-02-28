@@ -14,6 +14,8 @@ class ServerGame {
     this.black = blackUser;
     this.wready = false;
     this.bready = false;
+    this.wdraw = false;
+    this.bdraw = false;
     this.gamestate = {
       ongoing: true,
       cause: undefined,
@@ -27,6 +29,8 @@ class ServerGame {
       black: this.black,
       wready: this.wready,
       bready: this.bready,
+      wdraw: this.wdraw,
+      bdraw: this.bdraw,
       ongoing: this.gameState().ongoing,
     }
   }
@@ -42,6 +46,16 @@ class ServerGame {
 
   bothReady() {
     return this.bready && this.wready;
+  }
+
+  drawOffer(user) {
+    if(this.white === user) this.wdraw = true;
+    else if(this.black === user) this.bdraw = true;
+    if(this.wdraw && this.bdraw) {
+      this.gamestate.ongoing = false;
+      this.gamestate.winner = Color.NONE;
+      this.gamestate.cause = "drawn by agreement";
+    }
   }
 
   move(iRow, iCol, fRow, fCol, color) {

@@ -9,6 +9,10 @@ class ServerGame {
   constructor(whiteUser, blackUser) {
     //ServerGame tracks the board state, everyone who needs board updates,
     //who's ready
+    this.resetParameters(whiteUser, blackUser);
+  }
+
+  resetParameters(whiteUser, blackUser) {
     this.board = ChessBoard.startingPosition();
     this.white = whiteUser;
     this.black = blackUser;
@@ -16,13 +20,14 @@ class ServerGame {
     this.bready = false;
     this.wdraw = false;
     this.bdraw = false;
+    this.wrematch = false;
+    this.brematch = false;
     this.gamestate = {
       ongoing: true,
       cause: undefined,
       winner: undefined,
     }
   }
-
   metaData() {
     return {
       white: this.white,
@@ -31,6 +36,8 @@ class ServerGame {
       bready: this.bready,
       wdraw: this.wdraw,
       bdraw: this.bdraw,
+      wrematch: this.wrematch,
+      brematch: this.brematch,
       ongoing: this.gameState().ongoing,
     }
   }
@@ -55,6 +62,14 @@ class ServerGame {
       this.gamestate.ongoing = false;
       this.gamestate.winner = Color.NONE;
       this.gamestate.cause = "drawn by agreement";
+    }
+  }
+
+  rematchOffer(user) {
+    if(this.white === user) this.wrematch = true;
+    else if(this.black === user) this.brematch = true;
+    if(this.wrematch && this.brematch) {
+      this.resetParameters(this.black, this.white);
     }
   }
 

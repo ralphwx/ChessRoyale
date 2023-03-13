@@ -142,6 +142,16 @@ authserver.addEventHandler("resign", (user, args, ack) => {
   gameOver(user);
 });
 
+authserver.addEventHandler("rematch", (user, args, ack) => {
+  let game = lobbydata.getGame(user);
+  if(game === undefined || game.gameState().ongoing) return;
+  game.rematchOffer(user);
+  if(game.gameState().ongoing) {
+    authserver.notify(game.white, "refresh", {});
+    authserver.notify(game.black, "refresh", {});
+  }
+});
+
 //request for if a player aborts. If both players are already playing, then
 //this does nothing. If the user is not in a game, then this does nothing.
 authserver.addEventHandler("abort", (user, args, ack) => {

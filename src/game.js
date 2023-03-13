@@ -48,6 +48,9 @@ class Game extends React.Component {
         this.state.console.push(msg);
         this.setState({});
       });
+      this.socket.addEventHandler("refresh", (user, args) => {
+        window.location.replace(URL + "/game");
+      });
       function metaUpdate(caller) {
         caller.socket.notify("gamedata", {}, (data) => {
           if(data.white === user) {
@@ -60,6 +63,8 @@ class Game extends React.Component {
               opponentElo: data.blackElo,
               opponentReady: data.bready,
               ongoing: data.ongoing,
+              userRematch: data.wrematch,
+              opponentRematch: data.brematch,
             }
             if(!caller.state.drawOffered) {
               if(data.wdraw && !data.bdraw) {
@@ -84,6 +89,8 @@ class Game extends React.Component {
             opponentElo: data.whiteElo,
             opponentReady: data.wready,
             ongoing: data.ongoing,
+            userRematch: data.brematch,
+            opponentRematch: data.wrematch,
           }
           if(!caller.state.drawOffered) {
             if(data.wdraw && !data.bdraw) {
@@ -143,20 +150,29 @@ class Game extends React.Component {
     this.socket.notify("ready", {}, () => {});
   }
 
-  render() {
-    let oppready;
-    if(this.state.opponentReady) {
-      oppready = <button className="ready online">{"Opponent ready!"}</button>
-    } else {
-      oppready = <button className="ready offline">
-        {"Opponent preparing..."}
-      </button>
+  offerRematch() {
+    this.socket.notify("rematch", {}, () => {});
+  }
+
+  renderOpponentReadyButton() {
+    if(!this.state.opponentReady) {
+      return <button className="ready offline">Opponent preparing...</button>
     }
-    let userready;
-    if(this.state.userReady) {
-      userready = <button className="ready online">{"Ready!"}</button>
-    } else {
-      userready = <HoverButton
+    if(this.state.ongoing) {
+      return <button className="ready online">Opponent ready!</button>
+    }
+    if(this.state.opponentRematch && !this.state.userRematch) {
+      return <button className="ready online">Rematch offered</button>
+    }
+    if(this.state.opponentRematch && this.state.userRematch) {
+      return <button className="ready online">Rematch!</button>
+    }
+    return <button className="ready offline">Considering a rematch...</button>
+  }
+
+  renderUserReadyButton() {
+    if(!this.state.userReady) {
+      return <HoverButton
         innerHTML={"I'm preparing..."}
         innerHTMLHover={"Declare ready?"}
         className={"ready offline"}
@@ -164,18 +180,45 @@ class Game extends React.Component {
         onClick={() => {this.declareReady()}}
       />
     }
-    let userinfo = this.state.userOnline ? "info online" : "info offline";
-    let oppoinfo = this.state.opponentOnline ? "info online" : "info offline";
-    let resign = <HoverButton
-      key="exit"
-      innerHTML={<img className="chesspiece" src={exit} alt="leave"/>}
-      innerHTMLHover={<img className="chesspiece" src={exit} alt="leave"/>}
-      className={"resign"}
-      classNameHover={"resign resignhover"}
-      onClick={() => {window.location.replace(URL)}}
-    />
     if(this.state.ongoing) {
-      resign = <HoverButton
+      return <button className="ready online">Ready!</button>
+    }
+    if(this.state.userRematch && this.state.opponentRematch) {
+      return <button className="ready online">Rematch!</button>
+    }
+    if(this.state.userRematch && !this.state.opponentRematch) {
+      return <button className="ready online">Rematch offered</button>
+    }
+    if(!this.state.opponentRematch) {
+      return <HoverButton
+        innerHTML={"Considering a rematch..."}
+        innerHTMLHover={"Offer rematch?"}
+        className={"ready offline"}
+        classNameHover={"ready online"}
+        onClick={() => {this.offerRematch()}}
+      />
+    }
+    return <HoverButton 
+      innerHTML={"Considering a rematch..."}
+      innerHTMLHover={"Accept rematch?"}
+      className={"ready offline"}
+      classNameHover={"ready online"}
+      onClick={() => {this.offerRematch()}}
+    />
+  }
+
+  renderResignButton() {
+    if(!this.state.userReady || !this.state.opponentReady) {
+      return <HoverButton
+        innerHTML={<img className="chesspiece" src={abort} alt="abort"/>}
+        innerHTMLHover={<img className="chesspiece" src={abort} alt="abort"/>}
+        className={"resign"}
+        classNameHover={"resign resignhover"}
+        onClick={() => {this.abort()}}
+      />
+    }
+    if(this.state.ongoing) {
+      return <HoverButton
         key="resign"
         innerHTML={<img className="chesspiece" src={flag} alt="resign"/>}
         innerHTMLHover={<img className="chesspiece" src={flag} alt="resign"/>}
@@ -183,17 +226,23 @@ class Game extends React.Component {
         classNameHover={"resign resignhover"}
         onClick={() => {this.resign()}}
       />
-      if(!this.state.userReady || !this.state.opponentReady) {
-        resign = <HoverButton
-          key="abort"
-          innerHTML={<img className="chesspiece" src={abort} alt="abort"/>}
-          innerHTMLHover={<img className="chesspiece" src={abort} alt="abort"/>}
-          className={"resign"}
-          classNameHover={"resign resignhover"}
-          onClick={() => {this.abort()}}
-        />
-      }
     }
+    return <HoverButton
+      innerHTML={<img className="chesspiece" src={exit} alt="leave"/>}
+      innerHTMLHover={<img className="chesspiece" src={exit} alt="leave"/>}
+      className={"resign"}
+      classNameHover={"resign resignhover"}
+      onClick={() => {window.location.replace(URL)}}
+    />
+
+  }
+
+  render() {
+    let oppready = this.renderOpponentReadyButton();
+    let userready = this.renderUserReadyButton();
+    let userinfo = this.state.userOnline ? "info online" : "info offline";
+    let oppoinfo = this.state.opponentOnline ? "info online" : "info offline";
+    let resign = this.renderResignButton();
     let amount = (Date.now() - this.state.startTime) / resource_time;
     let console_text = []
     for(let t of this.state.console) console_text.push(<div>{t}<br/></div>);
